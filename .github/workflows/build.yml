@@ -68,7 +68,7 @@ jobs:
 
       - name: Accept licenses & install SDK components
         run: |
-          sdkmanager --licenses
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;35.0.0"
           echo "=== installed packages ==="
           sdkmanager --list_installed | head -40
@@ -81,12 +81,27 @@ jobs:
       - name: Build APK
         working-directory: android
         run: |
-          set -e
-          echo "JAVA_HOME=$JAVA_HOME"
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          which gradle && gradle --version
-          gradle :app:assembleDebug --stacktrace --no-daemon
-          ls -la app/build/outputs/apk/debug/
+          set +e
+          {
+            echo "JAVA_HOME=$JAVA_HOME"
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            which gradle || echo "GRADLE_NOT_IN_PATH"
+            gradle --version
+            gradle :app:assembleDebug --stacktrace --no-daemon
+            ls -la app/build/outputs/apk/debug/
+          } > gradle_build.log 2>&1
+          EXIT_CODE=$?
+          echo "===== exit code: $EXIT_CODE ====="
+          tail -120 gradle_build.log
+          exit $EXIT_CODE
+
+      - name: Upload gradle build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: android/gradle_build.log
+          if-no-files-found: ignore
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
