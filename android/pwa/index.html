@@ -9,6 +9,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>鲸鱼娘·汐汐</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+    "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js"
+  }
+}
+</script>
 <style>
 :root{--navy:#0b1d33;--navy2:#132a47;--teal:#2bb9c8;--ink:#e8f4fb;--dim:#9db8cc;--pink:#ff9eb2}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -74,6 +83,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
 <div id="avaWrap">
   <div id="speakBub"></div>
   <canvas id="avaCanvas" width="300" height="460"></canvas>
+  <canvas id="vrmCanvas" width="300" height="460" style="width:min(250px,58vw);height:auto;display:none;cursor:pointer"></canvas>
   <img id="customAva" alt="" style="display:none;width:min(250px,58vw);height:auto;border-radius:16px">
   <div id="mood">点我：摸头 / 戳脸 / 挠尾巴 会害羞哦～</div>
 </div>
@@ -116,6 +126,16 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
     <button class="btn gray" onclick="pickCustomImg()">📤 上传形象图片</button>
     <button class="btn gray" onclick="clearCustomImg()">🗑️ 恢复手绘</button>
   </div>
+  <label style="margin-top:14px">🎮 3D 模型（模之屋 VRM 模型）</label>
+  <div class="btnrow" style="margin-top:8px">
+    <button class="btn gray" onclick="openMoehime()">🌐 打开模之屋</button>
+    <button class="btn gray" onclick="pickVrm()">📤 导入 VRM 模型</button>
+  </div>
+  <div class="btnrow" style="margin-top:8px">
+    <button class="btn gray" onclick="clearVrm()">🗑️ 移除 3D 模型</button>
+  </div>
+  <div class="sw"><span>🎮 使用 3D 模型</span><input type="checkbox" id="setVrm"></div>
+  <input type="file" id="vrmFile" accept=".vrm,application/octet-stream" style="display:none">
   <label>连接方式（后台模式下 Key 存后端，手机/电脑数据互通）</label>
   <select id="setConn">
     <option value="direct">直连 DeepSeek（前端填 API Key）</option>
@@ -150,7 +170,7 @@ const SYSTEM_PROMPT = `你是「汐汐」，来自深海深渊的守护鲸族少
 【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；保持女仆人设。`.trim();
 
 const DEF = { apiKey:'', model:'deepseek-v4-flash', think:true, effort:'low', mem:true,
-  conn:'direct', backend:'', sync:'', customImg:'', useCustom:false };
+  conn:'direct', backend:'', sync:'', customImg:'', useCustom:false, useVrm:false, vrmName:'' };
 let S = Object.assign({}, DEF);
 try { S = Object.assign(DEF, JSON.parse(localStorage.getItem('wm_s')||'{}')); } catch(e){}
 let hist = [], curMode='chat', game=null, win=0, lose=0, busy=false, seq=0;
@@ -164,8 +184,8 @@ const SYSTEM_SHARK = `你是「澜澜」，DeepSeek 女仆鲨鱼娘，深海顶�
 【模式】[陪玩模式]：竞技游戏狂热粉，开局喊话实时解说赢了欢呼输了先嘴硬再安慰连败建议运动。[陪看模式]：看动作番全情投入看感人片段嘴硬说眼睛进海水。默认日常陪聊。
 【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；保持傲娇鲨鱼娘人设；不提「我是AI」。`.trim();
 
-function saveS(){ S.apiKey=$('#setKey').value.trim(); S.model=$('#setModel').value; S.think=$('#setThink').checked; S.effort=$('#setEffort').value; S.mem=$('#setMem').checked; S.useCustom=$('#setCustom').checked; S.conn=$('#setConn').value; S.backend=$('#setBackend').value.trim().replace(/\/+$/,''); S.sync=$('#setSync').value.trim(); localStorage.setItem('wm_s',JSON.stringify(S)); }
-function fillS(){ $('#setKey').value=S.apiKey; $('#setModel').value=S.model; $('#setThink').checked=S.think; $('#setEffort').value=S.effort; $('#setMem').checked=S.mem; $('#setCustom').checked=S.useCustom; $('#setConn').value=S.conn; $('#setBackend').value=S.backend; $('#setSync').value=S.sync; }
+function saveS(){ S.apiKey=$('#setKey').value.trim(); S.model=$('#setModel').value; S.think=$('#setThink').checked; S.effort=$('#setEffort').value; S.mem=$('#setMem').checked; S.useCustom=$('#setCustom').checked; S.useVrm=$('#setVrm').checked; S.conn=$('#setConn').value; S.backend=$('#setBackend').value.trim().replace(/\/+$/,''); S.sync=$('#setSync').value.trim(); localStorage.setItem('wm_s',JSON.stringify(S)); }
+function fillS(){ $('#setKey').value=S.apiKey; $('#setModel').value=S.model; $('#setThink').checked=S.think; $('#setEffort').value=S.effort; $('#setMem').checked=S.mem; $('#setCustom').checked=S.useCustom; $('#setVrm').checked=S.useVrm; $('#setConn').value=S.conn; $('#setBackend').value=S.backend; $('#setSync').value=S.sync; }
 function openSheet(){ fillS(); $('#sheet').classList.add('open'); $('#mask').classList.add('show'); }
 function closeSheet(){ $('#sheet').classList.remove('open'); $('#mask').classList.remove('show'); }
 function saveSheet(){ saveS(); closeSheet(); applyCustomAva(); bubble('已保存～'); }
@@ -432,13 +452,175 @@ function interact(zone){
   setTimeout(()=>{ if(AV.mood===mm[zone]) AV.mood='idle'; },4000);
 }
 function applyCustomAva(){
-  const img=$('#customAva'), c=$('#avaCanvas');
-  if(S.useCustom && S.customImg){
-    img.src=S.customImg; img.style.display='block'; c.style.display='none';
-  } else { img.style.display='none'; c.style.display='block'; }
+  const img=$('#customAva'), c=$('#avaCanvas'), v=$('#vrmCanvas');
+  if(S.useVrm && S.vrmName){ v.style.display='block'; c.style.display='none'; img.style.display='none'; if(window.__vrm) window.__vrm.setVisible(true); }
+  else if(S.useCustom && S.customImg){ img.src=S.customImg; img.style.display='block'; c.style.display='none'; v.style.display='none'; if(window.__vrm) window.__vrm.setVisible(false); }
+  else { img.style.display='none'; c.style.display='block'; v.style.display='none'; if(window.__vrm) window.__vrm.setVisible(false); }
 }
 function pickCustomImg(){ $('#customImg').click(); }
 function clearCustomImg(){ S.customImg=''; S.useCustom=false; $('#setCustom').checked=false; saveS(); applyCustomAva(); bubble('已恢复手绘形象'); }
+
+/* ============ 3D 模型（模之屋 VRM 模型） ============ */
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { VRMLoaderPlugin } from '@pixiv/three-vrm';
+
+const VDB='wm-vrm-db', VST='vrm';
+function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open(VDB,1); r.onupgradeneeded=()=>r.result.createObjectStore(VST); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function idbGet(k){ return idbOpen().then(db=>new Promise((res,rej)=>{ const t=db.transaction(VST,'readonly').objectStore(VST).get(k); t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); })); }
+function idbPut(k,v){ return idbOpen().then(db=>new Promise((res,rej)=>{ const t=db.transaction(VST,'readwrite').objectStore(VST).put(v,k); t.onsuccess=()=>res(); t.onerror=()=>rej(t.error); })); }
+function idbDel(k){ return idbOpen().then(db=>new Promise((res,rej)=>{ const t=db.transaction(VST,'readwrite').objectStore(VST).delete(k); t.onsuccess=()=>res(); t.onerror=()=>rej(t.error); })); }
+
+let vrm=null, vrmScene=null, vrmCamera=null, vrmRenderer=null, vrmClock=null;
+let vrmLoaded=false, vrmVisible=false, vrmMoodTimer=null, vrmReady=false;
+
+function setup(){
+  if(vrmReady) return; vrmReady=true;
+  const c=document.getElementById('vrmCanvas');
+  if(!c || !c.getContext) return;
+  vrmRenderer=new THREE.WebGLRenderer({canvas:c, alpha:true, antialias:true});
+  vrmRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  vrmRenderer.outputColorSpace=THREE.SRGBColorSpace;
+  vrmCamera=new THREE.PerspectiveCamera(28, c.clientWidth/c.clientHeight, 0.1, 20);
+  vrmCamera.position.set(0,1.25,2.6);
+  vrmScene=new THREE.Scene();
+  vrmScene.add(new THREE.HemisphereLight(0xffffff,0x446688,0.95));
+  const key=new THREE.DirectionalLight(0xffffff,1.25); key.position.set(0.6,1.4,1.2); vrmScene.add(key);
+  const rim=new THREE.DirectionalLight(0x9fd7ff,0.6); rim.position.set(-0.8,0.9,-1.0); vrmScene.add(rim);
+  const fill=new THREE.DirectionalLight(0x88ccee,0.35); fill.position.set(0,0.4,-1.6); vrmScene.add(fill);
+  vrmClock=new THREE.Clock();
+  c.addEventListener('click', onClick);
+  window.addEventListener('resize', ()=>{ if(vrmVisible) resize(); });
+  animate();
+}
+
+function loadBuf(buf){
+  const loader=new GLTFLoader();
+  loader.register(parser=>new VRMLoaderPlugin(parser));
+  return new Promise((res,rej)=>{
+    loader.parse(buf,'',gltf=>{
+      const loaded=gltf.userData && gltf.userData.vrm;
+      if(!loaded){ rej(new Error('不是有效的 VRM 模型')); return; }
+      if(vrm && vrm.scene && vrmScene) vrmScene.remove(vrm.scene);
+      vrm=loaded; vrmScene.add(vrm.scene); vrmLoaded=true; resetCamera(); res();
+    }, rej);
+  });
+}
+
+function resetCamera(){
+  if(!vrm) return;
+  try{
+    const box=new THREE.Box3().setFromObject(vrm.scene);
+    const size=box.getSize(new THREE.Vector3());
+    const h=Math.max(size.y,1.2);
+    vrmCamera.position.set(0, h*1.02, h*2.1);
+    vrmCamera.lookAt(0, h*0.5, 0);
+  }catch(e){}
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=vrmClock? vrmClock.getDelta(): 0;
+  if(vrmLoaded && vrm){
+    try{ vrm.update(dt); }catch(e){}
+    const t=performance.now()/1000;
+    if(vrm.humanoid){
+      const hips=vrm.humanoid.getNormalizedBoneNode('hips');
+      if(hips) hips.rotation.z = Math.sin(t*1.6)*0.012;
+      const head=vrm.humanoid.getNormalizedBoneNode('head');
+      if(head){ head.rotation.z = Math.sin(t*0.8)*0.02; head.rotation.x = Math.sin(t*0.5)*0.012; }
+    }
+    vrm.scene.position.y = Math.sin(t*1.2)*0.02;
+  }
+  if(vrmRenderer && vrmVisible && vrm) vrmRenderer.render(vrmScene, vrmCamera);
+}
+
+function setVisible(b){
+  vrmVisible=b;
+  const c=document.getElementById('vrmCanvas');
+  if(!c) return;
+  if(b && vrmLoaded){
+    c.style.display='block';
+    const a=document.getElementById('avaCanvas'), img=document.getElementById('customAva');
+    if(a) a.style.display='none'; if(img) img.style.display='none';
+    resize();
+  }
+}
+
+function resize(){
+  if(!vrmRenderer) return;
+  const c=document.getElementById('vrmCanvas');
+  vrmRenderer.setSize(c.clientWidth, c.clientHeight, false);
+  vrmCamera.aspect=Math.max(c.clientWidth/c.clientHeight,0.3); vrmCamera.updateProjectionMatrix();
+}
+
+function setMood(zone){
+  if(!vrmLoaded || !vrm || !vrm.expressionManager) return;
+  const em=vrm.expressionManager;
+  const names=['happy','joy','relaxed','blink','blinkL','blinkR','blush','shy','angry','sad'];
+  for(const n of names){ try{ em.setValue(n,0); }catch(e){} }
+  const map={head:'happy', cheek:'blush', tail:'shy', giggle:'happy'};
+  const name=map[zone];
+  if(name){ try{ em.setValue(name,1); }catch(e){} }
+  if(vrmMoodTimer) clearTimeout(vrmMoodTimer);
+  vrmMoodTimer=setTimeout(()=>{ for(const n of names){ try{ em.setValue(n,0); }catch(e){} } },4200);
+}
+
+function onClick(ev){
+  if(!vrmLoaded || !vrmVisible) return;
+  const c=document.getElementById('vrmCanvas');
+  const r=c.getBoundingClientRect();
+  const x=(ev.clientX-r.left)/r.width, y=(ev.clientY-r.top)/r.height;
+  let zone='giggle';
+  if(y<0.30) zone='head';
+  else if(y<0.52 && (x<0.30||x>0.70)) zone='cheek';
+  else if(y>0.82) zone='tail';
+  setMood(zone);
+  if(window.interact) window.interact(zone);
+}
+
+async function save(name, buf){ try{ await idbPut(name, new Blob([buf])); }catch(e){} }
+async function loadSaved(name){ try{ const b=await idbGet(name); return b? await b.arrayBuffer(): null; }catch(e){ return null; } }
+async function clearSaved(name){ try{ await idbDel(name); }catch(e){} }
+
+window.__vrm = { setup, loadBuf, setVisible, setMood, resize, save, loadSaved, clearSaved,
+  get has(){ return vrmLoaded; },
+  get name(){ return vrm && vrm.meta && vrm.meta.title ? vrm.meta.title : 'VRM 模型'; } };
+if(document.readyState!=='loading') setup();
+else document.addEventListener('DOMContentLoaded', setup);
+</script>
+
+function openMoehime(){ window.open('https://www.aplaybox.com','_blank'); }
+function pickVrm(){ $('#vrmFile').click(); }
+function clearVrm(){ const V=window.__vrm; if(V&&S.vrmName) V.clearSaved(S.vrmName); S.vrmName=''; S.useVrm=false; $('#setVrm').checked=false; saveS(); applyCustomAva(); bubble('已移除 3D 模型'); }
+$('#vrmFile').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  if(f.size>100*1024*1024){ bubble('VRM 模型过大（限 100MB）'); return; }
+  const rd=new FileReader();
+  rd.onload=async ev=>{
+    const V=window.__vrm; if(!V){ bubble('3D 渲染尚未就绪，请稍后重试'); return; }
+    try{ await V.loadBuf(ev.target.result); }
+    catch(err){ bubble('无法加载该 VRM：'+err.message); return; }
+    S.vrmName=f.name; S.useVrm=true; $('#setVrm').checked=true; saveS();
+    V.save(f.name, ev.target.result); applyCustomAva();
+    bubble('✅ 3D 模型已加载：'+f.name);
+  };
+  rd.readAsArrayBuffer(f);
+});
+$('#setVrm').addEventListener('change', ()=>{ S.useVrm=$('#setVrm').checked; saveS(); applyCustomAva(); });
+(async()=>{
+  if(!S.vrmName) return;
+  let V=null;
+  for(let i=0;i<50 && !(V=window.__vrm);i++){ await new Promise(r=>setTimeout(r,200)); }
+  if(!V) return;
+  const buf=await V.loadSaved(S.vrmName);
+  if(buf){
+    try{ await V.loadBuf(buf); }
+    catch(err){ S.vrmName=''; S.useVrm=false; saveS(); return; }
+    applyCustomAva();
+  }
+})();
 function toggleP(){
   persona = persona==='whale' ? 'shark' : 'whale';
   try{ localStorage.setItem('wm_persona', persona); }catch(e){}
