@@ -78,7 +78,7 @@ jobs:
         with:
           gradle-version: '8.13'
 
-      - name: Build APK
+      - name: Build APK (debug + release)
         working-directory: android
         run: |
           set +e
@@ -87,8 +87,8 @@ jobs:
             echo "ANDROID_HOME=$ANDROID_HOME"
             which gradle || echo "GRADLE_NOT_IN_PATH"
             gradle --version
-            gradle :app:assembleDebug --stacktrace --no-daemon
-            ls -la app/build/outputs/apk/debug/
+            gradle :app:assembleDebug :app:assembleRelease --stacktrace --no-daemon
+            ls -la app/build/outputs/apk/debug/ app/build/outputs/apk/release/
           } > gradle_build.log 2>&1
           EXIT_CODE=$?
           echo "===== exit code: $EXIT_CODE ====="
@@ -103,11 +103,13 @@ jobs:
           path: android/gradle_build.log
           if-no-files-found: ignore
 
-      - name: Upload APK artifact
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: whale-maid-android-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
 
       - name: Upload build reports (on failure)
         if: failure()
@@ -123,6 +125,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_tag != ''
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/debug/*.apk
+          files: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
           tag_name: ${{ github.event_name == 'push' && github.ref_name || github.event.inputs.release_tag }}
           generate_release_notes: true
