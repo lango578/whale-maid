@@ -788,6 +788,13 @@ class MainActivity : ComponentActivity() {
             close()
         }
         drawPath(hair, Color(0xFF1F6B94))
+        // 鲸类头鳍（萌娘百科「女仆鲸鱼娘」设定）
+        val fin = Path().apply {
+            moveTo(150f, 124f); quadraticTo(132f, 102f, 124f, 82f)
+            quadraticTo(136f, 92f, 144f, 98f); quadraticTo(150f, 86f, 156f, 98f)
+            quadraticTo(164f, 92f, 176f, 82f); quadraticTo(168f, 102f, 150f, 124f); close()
+        }
+        drawPath(fin, Color(0xFF2C86A5))
         drawRect(Color(0xFFFFE9DE), topLeft = Offset(141f, 224f), size = Size(18f, 30f))
         drawCircle(Color(0xFFFFE9DE), radius = 57f, center = Offset(150f, 182f))
 
