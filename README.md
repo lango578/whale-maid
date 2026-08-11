@@ -13,6 +13,8 @@ whale-maid/
 ├── server/                      # 🖥️ 轻量同步后端（零依赖 Node.js）
 │   ├── server.js               #   代理 DeepSeek（Key 集中管理）+ 手机/电脑数据同步
 │   └── config.example.json     #   配置模板（apiKey / syncKey / port）
+├── assets/                      # 🎨 默认形象素材（原画/模型）
+│   └── README.md               #   素材来源、原作者与授权说明
 ├── pc/                          # 💻 Windows 11 电脑端
 │   ├── whale-maid-pc.html      #   单文件网页版（双击即用，Edge/Chrome）
 │   ├── electron/               #   Electron 桌面版（可打包 exe + 桌面透明悬浮窗）
@@ -80,3 +82,15 @@ cd d:\Projects\whale-maid\build
 - **隐私**：API Key 仅保存在你本机（localStorage / SharedPreferences），对话只发给 DeepSeek 官方接口。
 - **费用**：按 DeepSeek 官方 token 计费（`deepseek-v4-flash` 很便宜，日常闲聊首选）。
 - 代码可自由修改：换人设、换模型、加功能都在 `persona` 和对应端的源码里。
+
+## 🎨 形象素材授权与版权
+
+默认虚拟形象素材（`assets/` 目录下的原画与 3D 模型）：
+
+- **原作者**：**上善无形**（已获得原作者许可，允许在本项目 GitHub 中使用）
+- **许可协议**：**CC BY-NC-SA 4.0**（署名-非商业性使用-相同方式共享 4.0 国际），完整法律文本见 `LICENSE-CC-BY-NC-SA-4.0`
+- **使用要求**：
+  1. 使用/转载/修改后分发本素材或包含本素材的作品，**必须保留原作者署名「上善无形」**；
+  2. 仅限**非商业性**使用；
+  3. 衍生作品须以**相同方式共享**（CC BY-NC-SA 4.0）发布。
+- 代码部分仍按 MIT 协议授权（`LICENSE`）；素材与模型部分按 CC BY-NC-SA 4.0 授权（详见 `NOTICE`）。
