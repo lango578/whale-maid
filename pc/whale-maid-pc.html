@@ -157,7 +157,6 @@ body.overlay .o-hint{position:absolute; bottom:2px; left:8px; color:rgba(255,255
   <button class="tbtn" id="btn-video" title="一起看视频">🎬 陪看</button>
   <button class="tbtn" id="btn-game" title="陪你打游戏">🎮 陪玩</button>
   <button class="tbtn" id="btn-overlay" title="桌面透明悬浮（玩游戏时伴在身边）">✨ 悬浮</button>
-  <button class="tbtn" id="btn-mute" title="语音播报">🔊 语音</button>
   <button class="tbtn" id="btn-settings" title="设置">⚙️ 设置</button>
 </div>
 
@@ -227,7 +226,6 @@ body.overlay .o-hint{position:absolute; bottom:2px; left:8px; color:rgba(255,255
     <button class="tbtn" id="btn-sync-pull">⬇️ 从云端拉取</button>
     <button class="tbtn" id="btn-sync-push">⬆️ 同步到云端</button>
   </div>
-  <div class="row"><span>AI 回复语音播报</span><label class="switch"><input type="checkbox" id="set-speak" checked><i></i></label></div>
   <div class="row"><span>形象面板动画</span><label class="switch"><input type="checkbox" id="set-anim" checked><i></i></label></div>
   <div class="row"><span>记忆对话历史（本地）</span><label class="switch"><input type="checkbox" id="set-mem" checked><i></i></label></div>
   <div class="row"><span>当前模式：<b id="modeNow" style="color:#8fe7f2">日常</b></span></div>
@@ -303,7 +301,7 @@ const SYSTEM_PROMPT = `你是「汐汐」，来自深海深渊的守护鲸族少
 /* ---------------- 设置 ---------------- */
 const DEFAULT_SETTINGS = {
   apiKey: '', model: 'deepseek-v4-flash', thinking: true, effort: 'low',
-  temp: 0.8, speak: true, anim: true, memory: true,
+  temp: 0.8, anim: true, memory: true,
   connMode: 'direct', backendUrl: '', syncKey: ''
 };
 let settings = Object.assign({}, DEFAULT_SETTINGS);
@@ -318,7 +316,6 @@ function saveSettings(){
   settings.thinking = $('#set-think').checked;
   settings.effort = $('#set-effort').value;
   settings.temp = parseFloat($('#set-temp').value);
-  settings.speak = $('#set-speak').checked;
   settings.anim = $('#set-anim').checked;
   settings.memory = $('#set-mem').checked;
   settings.connMode = $('#set-conn').value;
@@ -513,7 +510,6 @@ async function sendUser(raw){
       },
       () => {
         if (aiText) history.push({role:'assistant', content: aiText});
-        if (settings.speak && aiText) speak(aiText);
         if (IS_ELECTRON && window.whalemaid && aiText) window.whalemaid.overlaySpeak(aiText);
         AV.speak(false);
         bub.classList.remove('cursor-blink');
@@ -1228,7 +1224,6 @@ function togglePersona(){
     : '（人格切换为鲨鱼娘·澜澜）哟！主人！本小姐澜澜前来报到！想打架……不是，想打游戏吗？';
   bubble(msg, 5000);
   if (IS_ELECTRON && window.whalemaid) window.whalemaid.overlaySpeak(personaName() + '来啦～');
-  if (settings.speak) speak(msg);
 }
 
 /* ---- 云端同步（需后台模式） ---- */
@@ -1306,19 +1301,6 @@ function askWhaleSpeak(){
   $('#chatinput').value = prompt;
   sendUser(prompt);
 }
-/* ---- 语音合成 ---- */
-function speak(text){
-  if (!settings.speak) return;
-  try {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text.slice(0,300));
-    u.lang = 'zh-CN'; u.rate = 1.05; u.pitch = 1.35;
-    const zh = speechSynthesis.getVoices().find(v=>/zh/i.test(v.lang));
-    if (zh) u.voice = zh;
-    speechSynthesis.speak(u);
-  } catch(e){}
-}
-
 /* ---- 语音输入 ---- */
 let recognition = null;
 function setupVoice(){
@@ -1346,7 +1328,6 @@ function fillDrawer(){
   $('#set-think').checked = settings.thinking;
   $('#set-effort').value = settings.effort;
   $('#set-temp').value = settings.temp;
-  $('#set-speak').checked = settings.speak;
   $('#set-anim').checked = settings.anim;
   $('#set-mem').checked = settings.memory;
   $('#set-conn').value = settings.connMode;
@@ -1437,11 +1418,6 @@ function init(){
   $('#btn-close-drawer').addEventListener('click', () => $('#drawer').classList.remove('open'));
   $('#btn-save').addEventListener('click', () => { saveSettings(); $('#drawer').classList.remove('open'); toast('已保存～'); });
   $('#btn-clear').addEventListener('click', () => { if (confirm('确定清空对话吗？')) clearChat(); });
-  $('#btn-mute').addEventListener('click', () => {
-    settings.speak = !settings.speak;
-    $('#btn-mute').textContent = settings.speak ? '🔊 语音' : '🔇 静音';
-  });
-  $('#btn-mute').textContent = settings.speak ? '🔊 语音' : '🔇 静音';
 
   // 人格切换 + 云端同步
   $('#btn-persona').textContent = persona === 'whale' ? '🐳 汐汐' : '🦈 澜澜';
@@ -1490,7 +1466,6 @@ function init(){
   $('#btn-overlay').addEventListener('click', openOverlay);
 
   setupVoice();
-  if (speechSynthesis) speechSynthesis.getVoices();
 
   setInterval(() => {
     if (!busy && Math.random() < 0.55){
