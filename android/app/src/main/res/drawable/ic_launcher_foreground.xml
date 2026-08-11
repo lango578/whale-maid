@@ -16,6 +16,10 @@
     <path
         android:fillColor="#2C86A5"
         android:pathData="M37,48 C38,36 45,30 54,30 C63,30 70,36 71,48 L66,44 L61,46 L56,40 L50,46 L45,44 Z" />
+    <!-- 鲸类头鳍 -->
+    <path
+        android:fillColor="#2C86A5"
+        android:pathData="M54,32 C46,32 40,24 38,15 C42,20 46,22 50,22 C54,16 58,16 62,22 C66,22 70,20 74,15 C72,24 66,32 54,32 Z" />
     <!-- 呆毛 -->
     <path
         android:strokeColor="#7FE0F0"
