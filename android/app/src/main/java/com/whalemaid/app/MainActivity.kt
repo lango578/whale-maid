@@ -53,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -67,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.whalemaid.app.BuildConfig
 import com.whalemaid.app.data.ChatMessage
 import com.whalemaid.app.data.ChatViewModel
 import kotlinx.coroutines.delay
@@ -421,6 +423,8 @@ class MainActivity : ComponentActivity() {
                         Text("⬇️ 拉取", fontSize = 14.sp, modifier = Modifier.pointerInput(Unit) { detectTapGestures { onPull() } })
                         Text("⬆️ 同步", fontSize = 14.sp, modifier = Modifier.pointerInput(Unit) { detectTapGestures { onPush() } })
                     }
+                    Text("版本：${BuildConfig.VERSION_NAME} · Android", color = Color(0xFF9DB8CC), fontSize = 11.sp,
+                        modifier = Modifier.padding(top = 14.dp))
                 }
             },
             confirmButton = {
@@ -537,8 +541,23 @@ class MainActivity : ComponentActivity() {
     }
 
     // ================= 原生 Canvas 手绘 =================
+    /** 人物区域背景：径向渐变光晕 + 底部阴影平台，确保形象清晰可见 */
+    private fun DrawScope.drawBackdrop() {
+        drawRect(
+            Brush.radialGradient(
+                colors = listOf(Color(0xFF23618F), Color(0xFF0B1D33)),
+                center = Offset(size.width / 2f, size.height * 0.52f),
+                radius = size.width * 0.6f
+            )
+        )
+        drawOval(Color(0x40000000),
+            topLeft = Offset(size.width * 0.12f, size.height * 0.88f),
+            size = Size(size.width * 0.76f, size.height * 0.09f))
+    }
+
     private fun DrawScope.drawWhale(t: Float, blink: Boolean, mood: String, speaking: Boolean, persona: String) {
         if (persona == "shark") { drawSharkAll(t, blink, mood, speaking); return }
+        drawBackdrop()
         // 按宽高比例取较小缩放，保证人物完整显示并水平居中
         val s = min(size.width / 300f, size.height / 460f)
         val tx = (size.width - 300f * s) / 2f
@@ -563,6 +582,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun DrawScope.drawSharkAll(t: Float, blink: Boolean, mood: String, speaking: Boolean) {
+        drawBackdrop()
         val s = min(size.width / 300f, size.height / 460f)
         val tx = (size.width - 300f * s) / 2f
         val bob = sin(t * 2f) * 3f
