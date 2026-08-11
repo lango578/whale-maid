@@ -227,6 +227,13 @@ body.overlay .o-hint{position:absolute; bottom:2px; left:8px; color:rgba(255,255
     <button class="tbtn" id="btn-sync-push">⬆️ 同步到云端</button>
   </div>
   <div class="row"><span>形象面板动画</span><label class="switch"><input type="checkbox" id="set-anim" checked><i></i></label></div>
+  <label style="margin-top:16px">🎨 自定义形象（上传你的图片作为虚拟形象）</label>
+  <div class="row" style="margin-top:6px">
+    <button class="tbtn" id="btn-upload-img">📤 上传形象图片</button>
+    <button class="tbtn" id="btn-clear-img">🗑️ 恢复手绘</button>
+    <input type="file" id="custom-img" accept="image/*" style="display:none">
+  </div>
+  <div class="row"><span>使用自定义形象</span><label class="switch"><input type="checkbox" id="set-custom"><i></i></label></div>
   <div class="row"><span>记忆对话历史（本地）</span><label class="switch"><input type="checkbox" id="set-mem" checked><i></i></label></div>
   <div class="row"><span>当前模式：<b id="modeNow" style="color:#8fe7f2">日常</b></span></div>
   <div style="margin-top:18px; display:flex; gap:8px">
@@ -302,7 +309,8 @@ const SYSTEM_PROMPT = `你是「汐汐」，来自深海深渊的守护鲸族少
 const DEFAULT_SETTINGS = {
   apiKey: '', model: 'deepseek-v4-flash', thinking: true, effort: 'low',
   temp: 0.8, anim: true, memory: true,
-  connMode: 'direct', backendUrl: '', syncKey: ''
+  connMode: 'direct', backendUrl: '', syncKey: '',
+  customImg: '', useCustom: false
 };
 let settings = Object.assign({}, DEFAULT_SETTINGS);
 try {
@@ -317,6 +325,7 @@ function saveSettings(){
   settings.effort = $('#set-effort').value;
   settings.temp = parseFloat($('#set-temp').value);
   settings.anim = $('#set-anim').checked;
+  settings.useCustom = $('#set-custom').checked;
   settings.memory = $('#set-mem').checked;
   settings.connMode = $('#set-conn').value;
   settings.backendUrl = $('#set-backend').value.trim().replace(/\/+$/,'');
@@ -1141,6 +1150,11 @@ function renderAvatar(ctx, W, H, t, isMini){
   ctx.clearRect(0,0,W,H);
   ctx.save();
   ctx.scale(s,s);
+  if (settings.useCustom && customImage && customImage.complete && customImage.naturalWidth){
+    drawCustomAvatar(ctx, 300, 460, isMini);
+    ctx.restore();
+    return;
+  }
   if (!isMini){
     const g = ctx.createRadialGradient(150,300,10,150,300,220);
     g.addColorStop(0,'rgba(43,185,200,.12)'); g.addColorStop(1,'rgba(43,185,200,0)');
@@ -1170,6 +1184,32 @@ function renderAvatar(ctx, W, H, t, isMini){
   }
   ctx.restore();
   ctx.restore();
+}
+
+/* ================= 自定义形象（自由上传模型） ================= */
+let customImage = null;
+function loadCustomImage(){
+  if (settings.customImg){
+    customImage = new Image();
+    customImage.onload = () => {};
+    customImage.src = settings.customImg;
+  } else {
+    customImage = null;
+  }
+}
+function drawCustomAvatar(ctx, W, H, isMini){
+  if (!isMini){
+    const g = ctx.createRadialGradient(150,240,10,150,240,230);
+    g.addColorStop(0,'rgba(43,185,200,.16)'); g.addColorStop(1,'rgba(43,185,200,0)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
+  const iw = customImage.naturalWidth, ih = customImage.naturalHeight;
+  const sc = Math.min(W/iw, H/ih);
+  const w = iw*sc, h = ih*sc;
+  const x = (W-w)/2, y = (H-h)/2;
+  ctx.drawImage(customImage, x, y, w, h);
+  ctx.fillStyle = 'rgba(0,0,0,.22)';
+  ctx.beginPath(); ctx.ellipse(150, 448, 82, 10, 0, 0, Math.PI*2); ctx.fill();
 }
 
 function startAvatar(){
@@ -1329,6 +1369,7 @@ function fillDrawer(){
   $('#set-effort').value = settings.effort;
   $('#set-temp').value = settings.temp;
   $('#set-anim').checked = settings.anim;
+  $('#set-custom').checked = settings.useCustom;
   $('#set-mem').checked = settings.memory;
   $('#set-conn').value = settings.connMode;
   $('#set-backend').value = settings.backendUrl;
@@ -1464,6 +1505,33 @@ function init(){
     if (act === 'ai') askWhaleSpeak(); else interact(act);
   }));
   $('#btn-overlay').addEventListener('click', openOverlay);
+
+  // 自定义形象上传
+  $('#btn-upload-img').addEventListener('click', () => $('#custom-img').click());
+  $('#custom-img').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (f.size > 8*1024*1024){ toast('图片太大（限制 8MB）'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      settings.customImg = ev.target.result;
+      settings.useCustom = true;
+      $('#set-custom').checked = true;
+      localStorage.setItem('wm_settings', JSON.stringify(settings));
+      loadCustomImage();
+      toast('✅ 形象已上传！');
+    };
+    reader.readAsDataURL(f);
+  });
+  $('#btn-clear-img').addEventListener('click', () => {
+    settings.customImg = '';
+    settings.useCustom = false;
+    $('#set-custom').checked = false;
+    localStorage.setItem('wm_settings', JSON.stringify(settings));
+    loadCustomImage();
+    toast('已恢复手绘形象');
+  });
+  loadCustomImage();
 
   setupVoice();
 
