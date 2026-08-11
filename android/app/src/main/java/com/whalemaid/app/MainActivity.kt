@@ -1,6 +1,8 @@
 package com.whalemaid.app
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.widget.Toast
@@ -14,6 +16,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,9 +28,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,6 +66,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -70,6 +80,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import com.whalemaid.app.BuildConfig
 import com.whalemaid.app.data.ChatMessage
 import com.whalemaid.app.data.ChatViewModel
+import java.io.File
 import kotlinx.coroutines.delay
 import kotlin.math.min
 import kotlin.math.sin
@@ -101,6 +112,33 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private lateinit var customImgConsumer: (Bitmap) -> Unit
+    private val customImgLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            try {
+                val bmp = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+                if (bmp != null && ::customImgConsumer.isInitialized) customImgConsumer(bmp)
+            } catch (e: Exception) { toast("图片读取失败") }
+        }
+    }
+    private fun launchCustomImg() { try { customImgLauncher.launch("image/*") } catch (e: Exception) { toast("无法打开相册") } }
+    private fun saveCustomImg(bmp: Bitmap) {
+        val f = File(filesDir, "custom_avatar.png")
+        try { f.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) } } catch (e: Exception) {}
+        prefs().edit().putString("custom_img", f.absolutePath).apply()
+    }
+    private fun loadCustomImg(): Bitmap? {
+        val p = prefs().getString("custom_img", null) ?: return null
+        return try { BitmapFactory.decodeFile(p) } catch (e: Exception) { null }
+    }
+    private fun clearCustomImg() {
+        prefs().edit().remove("custom_img").remove("use_custom_ava").apply()
+        try { File(filesDir, "custom_avatar.png").delete() } catch (e: Exception) {}
+    }
+    private fun customAvaEnabled(): Boolean = prefs().getBoolean("use_custom_ava", false)
+    private fun setCustomAvaEnabled(b: Boolean) = prefs().edit().putBoolean("use_custom_ava", b).apply()
+    private fun prefs() = getSharedPreferences("wm_prefs", MODE_PRIVATE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -136,9 +174,18 @@ class MainActivity : ComponentActivity() {
         var mode by remember { mutableStateOf("chat") }
         var gameName by remember { mutableStateOf("") }
         var persona by remember { mutableStateOf(vm.persona) }
+        var customBitmap by remember { mutableStateOf<Bitmap?>(loadCustomImg()) }
+        var useCustomAva by remember { mutableStateOf(customAvaEnabled()) }
 
         DisposableEffect(Unit) {
             voiceConsumer = { s -> input = if (input.isBlank()) s else "$input $s" }
+            customImgConsumer = { bmp ->
+                customBitmap = bmp
+                saveCustomImg(bmp)
+                useCustomAva = true
+                setCustomAvaEnabled(true)
+                toast("✅ 形象已上传")
+            }
             onDispose {}
         }
 
@@ -168,7 +215,7 @@ class MainActivity : ComponentActivity() {
 
         MaterialTheme(colorScheme = OceanDark) {
             Surface(modifier = Modifier.fillMaxSize()) {
-                Column(modifier = Modifier.fillMaxSize().imePadding()) {
+                Column(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding()) {
                     TopBar(persona = persona,
                         onTogglePersona = {
                             val p = if (persona == "whale") "shark" else "whale"
@@ -178,7 +225,8 @@ class MainActivity : ComponentActivity() {
                             toast(if (p == "shark") "🦈 已切换到鲨鱼娘·澜澜！" else "🐳 已切换到鲸鱼娘·汐汐～")
                         },
                         onSettings = { showSettings = true })
-                    WhaleAvatar(mood = mood, speaking = speaking, persona = persona) { zone ->
+                    WhaleAvatar(mood = mood, speaking = speaking, persona = persona,
+                        customBitmap = customBitmap, useCustom = useCustomAva) { zone ->
                         mood = interactMood(zone)
                         toast(interactLine(zone))
                     }
@@ -198,6 +246,15 @@ class MainActivity : ComponentActivity() {
             onSetPersona = { p -> persona = p },
             onPull = { pullCloud(vm) },
             onPush = { pushCloud(vm) },
+            useCustomAva = useCustomAva,
+            onSetUseCustom = { b -> useCustomAva = b; setCustomAvaEnabled(b) },
+            onUploadCustom = { launchCustomImg() },
+            onClearCustom = {
+                customBitmap = null
+                useCustomAva = false
+                clearCustomImg()
+                toast("已恢复手绘形象")
+            },
             onDismiss = { showSettings = false })
         if (showGame) GameDialog(vm) { showGame = false }
     }
@@ -337,7 +394,10 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun SettingsDialog(vm: ChatViewModel, onSetPersona: (String) -> Unit,
-                               onPull: () -> Unit, onPush: () -> Unit, onDismiss: () -> Unit) {
+                               onPull: () -> Unit, onPush: () -> Unit,
+                               useCustomAva: Boolean, onSetUseCustom: (Boolean) -> Unit,
+                               onUploadCustom: () -> Unit, onClearCustom: () -> Unit,
+                               onDismiss: () -> Unit) {
         var key by remember { mutableStateOf(vm.apiKey) }
         var model by remember { mutableStateOf(vm.model) }
         var think by remember { mutableStateOf(vm.thinking) }
@@ -410,8 +470,25 @@ class MainActivity : ComponentActivity() {
                         Text("⬇️ 拉取", fontSize = 14.sp, modifier = Modifier.pointerInput(Unit) { detectTapGestures { onPull() } })
                         Text("⬆️ 同步", fontSize = 14.sp, modifier = Modifier.pointerInput(Unit) { detectTapGestures { onPush() } })
                     }
+                    Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("🎨 使用自定义形象", fontSize = 13.sp)
+                        Spacer(Modifier.weight(1f))
+                        Text(if (useCustomAva) "✔" else "✘", fontSize = 18.sp,
+                            color = if (useCustomAva) Color(0xFF2BB9C8) else Color(0xFF9DB8CC),
+                            modifier = Modifier.pointerInput(Unit) { detectTapGestures { onSetUseCustom(!useCustomAva) } })
+                    }
+                    Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("📤 上传形象图片", fontSize = 14.sp, color = Color(0xFF8FE7F2),
+                            modifier = Modifier.pointerInput(Unit) { detectTapGestures { onUploadCustom() } })
+                        Text("🗑️ 恢复手绘", fontSize = 14.sp, color = Color(0xFF8FE7F2),
+                            modifier = Modifier.pointerInput(Unit) { detectTapGestures { onClearCustom() } })
+                    }
                     Text("版本：${BuildConfig.VERSION_NAME} · Android", color = Color(0xFF9DB8CC), fontSize = 11.sp,
                         modifier = Modifier.padding(top = 14.dp))
+                    val sc = LocalConfiguration.current
+                    val dens = LocalDensity.current.density
+                    Text("屏幕：${sc.screenWidthDp}×${sc.screenHeightDp}dp · 密度 ${"%.2f".format(dens)}× · 最小宽度 ${sc.smallestScreenWidthDp}dp",
+                        color = Color(0xFF9DB8CC), fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
                 }
             },
             confirmButton = {
@@ -494,7 +571,8 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun WhaleAvatar(mood: String, speaking: Boolean, persona: String, onHit: (String) -> Unit) {
+    private fun WhaleAvatar(mood: String, speaking: Boolean, persona: String,
+                            customBitmap: Bitmap?, useCustom: Boolean, onHit: (String) -> Unit) {
         val infinite = rememberInfiniteTransition(label = "wm")
         val t by infinite.animateFloat(0f, 100f,
             animationSpec = infiniteRepeatable(tween(100000, easing = LinearEasing), RepeatMode.Restart),
@@ -508,19 +586,35 @@ class MainActivity : ComponentActivity() {
                 blink = false
             }
         }
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Canvas(modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        val x = offset.x / size.width * 300f
-                        val y = offset.y / size.height * 460f
-                        onHit(hitZone(x, y))
-                    }
+        val config = LocalConfiguration.current
+        // 自适应：形象高度 = 屏宽×0.62，限制在 180dp~屏高36% 之间，适配不同屏幕
+        val avatarH = remember(config.screenWidthDp, config.screenHeightDp) {
+            val w = config.screenWidthDp.toFloat()
+            val h = config.screenHeightDp.toFloat()
+            (w * 0.62f).coerceIn(180f, h * 0.36f)
+        }
+        val tapMod = Modifier
+            .fillMaxWidth()
+            .height(avatarH.dp)
+            .pointerInput(Unit) {
+                detectTapGestures { offset ->
+                    val x = offset.x / size.width * 300f
+                    val y = offset.y / size.height * 460f
+                    onHit(hitZone(x, y))
                 }
-            ) {
-                drawWhale(t, blink, mood, speaking, persona)
+            }
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (useCustom && customBitmap != null) {
+                Image(
+                    bitmap = customBitmap.asImageBitmap(),
+                    contentDescription = "自定义形象",
+                    modifier = tapMod,
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Canvas(modifier = tapMod) {
+                    drawWhale(t, blink, mood, speaking, persona)
+                }
             }
             Text(if (persona == "shark") "点我：摸背鳍 / 戳脸 / 摸尾巴 会咬人哦～" else "点我：摸头 / 戳脸 / 挠尾巴 会害羞哦～",
                 color = Color(0xFF9DB8CC), fontSize = 11.sp)
