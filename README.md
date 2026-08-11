@@ -39,6 +39,21 @@ whale-maid/
 - 顶栏「🐳 汐汐 / 🦈 澜澜」一键切换：系统提示词、手绘形象（发色/尾巴/虎牙/女仆装）、互动台词全部同步换装，切换后她会用自己的人设跟你打招呼。
 - 人格选择会被记住（本地），后台模式下还会随云端同步到另一台设备。
 
+## 📦 打包安装包（exe / apk）
+
+一键脚本放在 `build\` 文件夹，自动检测并安装缺失工具（Node.js / JDK / Android SDK / Gradle）：
+
+```powershell
+# 电脑端 exe 安装程序
+cd d:\Projects\whale-maid\build
+.\build-pc-exe.ps1          # 产物：pc\electron\dist\（Setup 安装版 + 便携版）
+
+# 手机端 apk 安装包
+.\build-android-apk.ps1     # 产物：android\app\build\outputs\apk\debug\app-debug.apk
+```
+
+也可以用 Android Studio 打开 `android\` 手动构建。详细步骤与常见问题见 **`build\README.md`**。
+
 ## 功能一览
 
 | 功能 | 电脑端 | 手机端 |

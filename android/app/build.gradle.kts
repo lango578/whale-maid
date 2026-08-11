@@ -7,6 +7,7 @@ plugins {
 android {
     namespace = "com.whalemaid.app"
     compileSdk = 36
+    buildToolsVersion = "35.0.0"
 
     defaultConfig {
         applicationId = "com.whalemaid.app"
