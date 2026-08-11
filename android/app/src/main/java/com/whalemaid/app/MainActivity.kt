@@ -16,6 +16,8 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
@@ -68,6 +70,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import com.whalemaid.app.data.ChatMessage
 import com.whalemaid.app.data.ChatViewModel
 import kotlinx.coroutines.delay
+import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -358,7 +361,7 @@ class MainActivity : ComponentActivity() {
             onDismissRequest = onDismiss,
             title = { Text("⚙️ 设置") },
             text = {
-                Column {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text("人格（点击切换）", color = Color(0xFF9DB8CC), fontSize = 12.sp)
                     Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Surface(shape = RoundedCornerShape(50),
@@ -517,7 +520,7 @@ class MainActivity : ComponentActivity() {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Canvas(modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(300f / 460f)
+                .height(250.dp)
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
                         val x = offset.x / size.width * 300f
@@ -536,10 +539,15 @@ class MainActivity : ComponentActivity() {
     // ================= 原生 Canvas 手绘 =================
     private fun DrawScope.drawWhale(t: Float, blink: Boolean, mood: String, speaking: Boolean, persona: String) {
         if (persona == "shark") { drawSharkAll(t, blink, mood, speaking); return }
-        val s = size.width / 300f
+        // 按宽高比例取较小缩放，保证人物完整显示并水平居中
+        val s = min(size.width / 300f, size.height / 460f)
+        val tx = (size.width - 300f * s) / 2f
         val bob = sin(t * 2f) * 3f
         val squash = if (mood == "happy") 0.97f else 1f
-        withTransform({ scale(s, s) }) {
+        withTransform({
+            translate(tx, 0f)
+            scale(s, s, pivot = Offset.Zero)
+        }) {
             withTransform({
                 translate(0f, bob)
                 scale(2f - squash, squash, pivot = Offset(150f, 240f))
@@ -555,9 +563,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun DrawScope.drawSharkAll(t: Float, blink: Boolean, mood: String, speaking: Boolean) {
-        val s = size.width / 300f
+        val s = min(size.width / 300f, size.height / 460f)
+        val tx = (size.width - 300f * s) / 2f
         val bob = sin(t * 2f) * 3f
-        withTransform({ scale(s, s) }) {
+        withTransform({
+            translate(tx, 0f)
+            scale(s, s, pivot = Offset.Zero)
+        }) {
             withTransform({ translate(0f, bob) }) {
                 drawBubbles(t)
                 drawOval(Color(0x4D000000), topLeft = Offset(88f, 444f), size = Size(124f, 18f))
