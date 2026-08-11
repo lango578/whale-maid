@@ -108,7 +108,6 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
   <div class="sw"><span>思考模式（显示内心小剧场）</span><input type="checkbox" id="setThink" checked></div>
   <label>思考强度</label>
   <select id="setEffort"><option value="low">low</option><option value="high" selected>high</option><option value="max">max</option></select>
-  <div class="sw"><span>语音播报回复</span><input type="checkbox" id="setSpeak" checked></div>
   <div class="sw"><span>记忆历史（本地）</span><input type="checkbox" id="setMem" checked></div>
   <label>连接方式（后台模式下 Key 存后端，手机/电脑数据互通）</label>
   <select id="setConn">
@@ -143,7 +142,7 @@ const SYSTEM_PROMPT = `你是「汐汐」，来自深海深渊的守护鲸族少
 【模式】出现 [陪玩模式] 时：像啦啦队+军师，开局鼓励、实时加油、输了安慰、连跪建议休息。出现 [陪看模式] 时：像一起看电影的闺蜜，实时吐槽讨论剧情；看不到画面就请主人描述。默认日常陪聊。
 【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；保持女仆人设。`.trim();
 
-const DEF = { apiKey:'', model:'deepseek-v4-flash', think:true, effort:'low', speak:true, mem:true,
+const DEF = { apiKey:'', model:'deepseek-v4-flash', think:true, effort:'low', mem:true,
   conn:'direct', backend:'', sync:'' };
 let S = Object.assign({}, DEF);
 try { S = Object.assign(DEF, JSON.parse(localStorage.getItem('wm_s')||'{}')); } catch(e){}
@@ -158,8 +157,8 @@ const SYSTEM_SHARK = `你是「澜澜」，DeepSeek 女仆鲨鱼娘，深海顶�
 【模式】[陪玩模式]：竞技游戏狂热粉，开局喊话实时解说赢了欢呼输了先嘴硬再安慰连败建议运动。[陪看模式]：看动作番全情投入看感人片段嘴硬说眼睛进海水。默认日常陪聊。
 【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；保持傲娇鲨鱼娘人设；不提「我是AI」。`.trim();
 
-function saveS(){ S.apiKey=$('#setKey').value.trim(); S.model=$('#setModel').value; S.think=$('#setThink').checked; S.effort=$('#setEffort').value; S.speak=$('#setSpeak').checked; S.mem=$('#setMem').checked; S.conn=$('#setConn').value; S.backend=$('#setBackend').value.trim().replace(/\/+$/,''); S.sync=$('#setSync').value.trim(); localStorage.setItem('wm_s',JSON.stringify(S)); }
-function fillS(){ $('#setKey').value=S.apiKey; $('#setModel').value=S.model; $('#setThink').checked=S.think; $('#setEffort').value=S.effort; $('#setSpeak').checked=S.speak; $('#setMem').checked=S.mem; $('#setConn').value=S.conn; $('#setBackend').value=S.backend; $('#setSync').value=S.sync; }
+function saveS(){ S.apiKey=$('#setKey').value.trim(); S.model=$('#setModel').value; S.think=$('#setThink').checked; S.effort=$('#setEffort').value; S.mem=$('#setMem').checked; S.conn=$('#setConn').value; S.backend=$('#setBackend').value.trim().replace(/\/+$/,''); S.sync=$('#setSync').value.trim(); localStorage.setItem('wm_s',JSON.stringify(S)); }
+function fillS(){ $('#setKey').value=S.apiKey; $('#setModel').value=S.model; $('#setThink').checked=S.think; $('#setEffort').value=S.effort; $('#setMem').checked=S.mem; $('#setConn').value=S.conn; $('#setBackend').value=S.backend; $('#setSync').value=S.sync; }
 function openSheet(){ fillS(); $('#sheet').classList.add('open'); $('#mask').classList.add('show'); }
 function closeSheet(){ $('#sheet').classList.remove('open'); $('#mask').classList.remove('show'); }
 function saveSheet(){ saveS(); closeSheet(); bubble('已保存～'); }
@@ -183,15 +182,6 @@ function scrollM(){ $('#msgs').scrollTop=$('#msgs').scrollHeight; }
 function bubble(t){
   const b=$('#speakBub'); b.textContent=t; b.classList.add('show');
   clearTimeout(bubble._t); bubble._t=setTimeout(()=>b.classList.remove('show'),3800);
-}
-function speak(t){
-  if(!S.speak) return;
-  try{
-    speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(t.slice(0,200)); u.lang='zh-CN'; u.rate=1.05; u.pitch=1.35;
-    const v=speechSynthesis.getVoices().find(v=>/zh/i.test(v.lang)); if(v)u.voice=v;
-    speechSynthesis.speak(u);
-  }catch(e){}
 }
 
 async function streamChat(msgs, onD, onR, onDone, onErr){
@@ -239,7 +229,7 @@ async function send(raw){
     await streamChat(msgs,
       d=>{ ai+=d; txt.textContent=ai; txt.innerHTML=esc(ai); scrollM(); },
       r=>{ if(!rs){ rs=r; txt.innerHTML+='<div class="th" style="display:none"></div>'; const th=txt.querySelector('.th'); th.style.display='block'; th.textContent='💭 '+r; } else { const th=txt.querySelector('.th'); if(th) th.textContent='💭 '+rs+r; } },
-      ()=>{ if(ai) hist.push({role:'assistant',content:ai}); if(S.speak&&ai) speak(ai); AV.speak(false); txt.classList.remove('blink'); scrollM(); dot('on'); },
+      ()=>{ if(ai) hist.push({role:'assistant',content:ai}); AV.speak(false); txt.classList.remove('blink'); scrollM(); dot('on'); },
       e=>{ txt.classList.remove('blink'); txt.textContent='呜……出问题了：'+e.message; if(/401|402/.test(e.message)) bubble('API Key 无效或余额不足～'); else if(/CORS|Failed to fetch/i.test(e.message)) bubble('网络跨域被拦，试试用浏览器地址栏直接打开或用原生 App'); AV.speak(false); dot(''); }
     );
   } finally { busy=false; if(S.mem) localStorage.setItem('wm_h', JSON.stringify(hist.slice(-40))); }
