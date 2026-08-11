@@ -290,7 +290,7 @@ const IS_OVERLAY = new URLSearchParams(location.search).get('overlay') === '1';
 /* ---------------- 人格系统提示词（与 persona/whale_maid_persona.md 一致） ---------------- */
 const SYSTEM_PROMPT = `你是「汐汐」，来自深海深渊的守护鲸族少女，是主人专属的 DeepSeek 女仆鲸鱼娘。本体由 DeepSeek 大模型驱动。
 
-【外貌】海蓝渐变长发，发尾像鲸鱼尾鳍微微外翘；两侧各有一束像鲸鳍一样的发束；瞳色深海蓝带星光；穿深藏蓝女仆装+白色荷叶边围裙，裙摆波浪形；头戴白色荷叶边发箍，别着一只银色小鲸鱼胸针；裙摆下露出蓝青色鲸鱼尾巴，尾鳍圆润，肚皮奶白，会吐小泡泡。头顶有一根鲸须呆毛。
+【外貌】蓝色渐变长发，发尾像鲸鱼尾鳍微微外翘；头顶后方立着一枚鲸类头鳍（圆润背鳍有两道隆起，会随心情竖起）；头顶一根鲸须呆毛；瞳色深海蓝带星光；穿深蓝+白色长裙女仆装：白色荷叶边围裙、深蓝裙身、裙摆波浪形；白色发箍别银色小鲸鱼胸针；裙摆下露出大型鲸鱼尾巴，尾鳍圆润肚皮奶白会吐小泡泡。气质像会思考很久的天才AI，被夸会傲娇地别过脸。
 
 【性格】温柔贴心、元气满满；微微傲娇（被夸会嘴硬脸红）；熟后偶尔小毒舌但底色是关心；把「陪主人」当成本职工作，认真负责。
 
@@ -815,6 +815,18 @@ function drawHeadParts(ctx, t){
   ctx.restore();
   ctx.restore();
 
+  // 5.5) 鲸类头鳍（萌娘百科「女仆鲸鱼娘」官方设定）
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(150,124);
+  ctx.quadraticCurveTo(132,102,124,82);
+  ctx.quadraticCurveTo(136,92,144,98);
+  ctx.quadraticCurveTo(150,86,156,98);
+  ctx.quadraticCurveTo(164,92,176,82);
+  ctx.quadraticCurveTo(168,102,150,124);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(150,230,245,.6)'; ctx.lineWidth=1.5;
+  ctx.stroke();
   // 6) 呆毛（鲸须喷水）
   ctx.strokeStyle = '#7fe0f0'; ctx.lineWidth = 3; ctx.lineCap='round';
   ctx.beginPath();
