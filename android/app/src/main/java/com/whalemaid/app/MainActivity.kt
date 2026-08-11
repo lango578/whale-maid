@@ -193,7 +193,7 @@ class MainActivity : ComponentActivity() {
                         mode = m
                         if (m == "game") showGame = true
                     }
-                    MessageList(messages)
+                    MessageList(messages, Modifier.weight(1f))
                     InputBar(input, { input = it }, busy,
                         onSend = { sendUser(input.trim()); input = "" },
                         onVoice = { launchVoice() })
@@ -287,12 +287,12 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun MessageList(messages: List<ChatMessage>) {
+    private fun MessageList(messages: List<ChatMessage>, modifier: Modifier = Modifier) {
         val listState = rememberLazyListState()
         LaunchedEffect(messages.size) {
             if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
         }
-        LazyColumn(state = listState, modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 10.dp),
+        LazyColumn(state = listState, modifier = modifier.padding(horizontal = 10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(messages.size) { i -> MessageBubble(messages[i]) }
         }
@@ -525,7 +525,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             ) {
-                drawWhale(t.value, blink, mood, speaking, persona)
+                drawWhale(t, blink, mood, speaking, persona)
             }
             Text(if (persona == "shark") "点我：摸背鳍 / 戳脸 / 摸尾巴 会咬人哦～" else "点我：摸头 / 戳脸 / 挠尾巴 会害羞哦～",
                 color = Color(0xFF9DB8CC), fontSize = 11.sp)
