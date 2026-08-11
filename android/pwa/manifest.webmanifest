@@ -1,0 +1,14 @@
+{
+  "name": "鲸鱼娘·汐汐（DeepSeek 女仆鲸鱼娘）",
+  "short_name": "汐汐",
+  "description": "DeepSeek 女仆鲸鱼娘陪聊、陪玩游戏、陪看视频",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1d33",
+  "theme_color": "#0b1d33",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

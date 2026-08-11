@@ -1,0 +1,23 @@
+# ===== 依赖 / 构建产物 =====
+node_modules/
+dist/
+*.log
+
+# ===== 敏感文件（含 API Key / 用户数据，切勿上传）=====
+server/config.json
+server/data.json
+
+# ===== Android 构建 =====
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk
+*.aab
+
+# ===== IDE / 系统 =====
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

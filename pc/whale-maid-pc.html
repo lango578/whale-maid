@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鲸鱼娘·汐汐</title>
+<style>
+:root{
+  --navy:#0b1d33; --navy2:#132a47; --teal:#2bb9c8; --teal2:#64e3ef;
+  --bubble:#dff7fb; --ink:#e8f4fb; --ink-dim:#9db8cc; --pink:#ff9eb2;
+  --panel:rgba(16,34,58,.82); --panel2:rgba(23,48,80,.72);
+  --line:rgba(120,210,230,.22);
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{
+  font-family:"Microsoft YaHei UI","PingFang SC","Segoe UI",sans-serif;
+  background:
+    radial-gradient(1200px 700px at 78% 8%, rgba(43,185,200,.22), transparent 60%),
+    radial-gradient(900px 600px at 12% 92%, rgba(40,90,160,.30), transparent 60%),
+    linear-gradient(160deg,#081426 0%, #0b1d33 45%, #0f2b47 100%);
+  color:var(--ink); overflow:hidden;
+}
+/* ===== 顶部栏 ===== */
+#topbar{
+  height:56px; display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:rgba(8,20,38,.75); border-bottom:1px solid var(--line);
+  -webkit-app-region:drag; user-select:none;
+}
+#topbar .logo{font-size:22px}
+#topbar .title{font-size:17px; font-weight:700; letter-spacing:1px;
+  background:linear-gradient(90deg,#8fe7f2,#5ec4d8,#ffb3c4);
+  -webkit-background-clip:text; background-clip:text; color:transparent}
+#topbar .sub{font-size:11px; color:var(--ink-dim)}
+#status-dot{width:9px;height:9px;border-radius:50%;background:#f5b64c;transition:.3s}
+#status-dot.on{background:#4ce39a; box-shadow:0 0 8px #4ce39a}
+#topbar .spacer{flex:1}
+.tbtn{
+  -webkit-app-region:no-drag; cursor:pointer; border:1px solid var(--line);
+  background:var(--panel2); color:var(--ink); border-radius:10px; padding:6px 12px;
+  font-size:13px; transition:.18s; display:flex; align-items:center; gap:5px;
+}
+.tbtn:hover{background:rgba(43,185,200,.28); transform:translateY(-1px)}
+.tbtn.primary{background:linear-gradient(120deg,#1f93b8,#2bb9c8); border-color:transparent; font-weight:600}
+.tbtn.danger{color:#ffc9d3}
+/* ===== 主区域 ===== */
+#main{display:flex; height:calc(100vh - 56px)}
+/* ---- 聊天面板 ---- */
+#chatpanel{flex:0 0 58%; min-width:420px; display:flex; flex-direction:column; border-right:1px solid var(--line)}
+#chattabs{display:flex; gap:6px; padding:8px 12px 0; font-size:13px}
+.chattab{background:transparent; border:none; color:var(--ink-dim); padding:6px 12px; cursor:pointer; border-radius:8px 8px 0 0; border-bottom:2px solid transparent}
+.chattab.on{color:#8fe7f2; border-bottom-color:#2bb9c8; font-weight:600}
+#messages{flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:12px}
+.msg{max-width:82%; display:flex; gap:8px; align-items:flex-end}
+.msg .ava{width:34px;height:34px;border-radius:50%;flex:0 0 34px; display:flex;align-items:center;justify-content:center;font-size:18px;
+  background:linear-gradient(135deg,#14557a,#2bb9c8); border:1px solid var(--line)}
+.msg.me{flex-direction:row-reverse; align-self:flex-end}
+.msg.me .ava{background:linear-gradient(135deg,#4a3a75,#a06bd8)}
+.bubble{padding:10px 14px; border-radius:16px; font-size:14px; line-height:1.65; white-space:pre-wrap; word-break:break-word; position:relative}
+.msg.ai .bubble{background:var(--panel); border:1px solid var(--line); border-bottom-left-radius:4px}
+.msg.me .bubble{background:linear-gradient(135deg,#2a4a7e,#3a66a8); border-bottom-right-radius:4px}
+.msg .time{font-size:10px; color:var(--ink-dim); align-self:center; white-space:nowrap}
+.bubble code{background:rgba(0,0,0,.35); padding:1px 5px; border-radius:5px; font-family:Consolas,monospace; font-size:12px}
+.thinkbox{margin-top:8px; font-size:12px; color:#8fc9dd; border-left:2px solid #2bb9c8; padding-left:8px; background:rgba(43,185,200,.06); border-radius:0 8px 8px 0}
+.thinkbox summary{cursor:pointer; color:#6fb8cf}
+.cursor-blink::after{content:"▍"; color:#8fe7f2; animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+/* 输入区 */
+#inputbar{display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line); align-items:flex-end}
+#chatinput{
+  flex:1; resize:none; height:52px; max-height:140px; border:1px solid var(--line); border-radius:14px;
+  background:rgba(10,26,46,.8); color:var(--ink); font-size:14px; padding:12px 14px; font-family:inherit; outline:none; line-height:1.5;
+}
+#chatinput:focus{border-color:#2bb9c8; box-shadow:0 0 0 3px rgba(43,185,200,.15)}
+/* 设置抽屉 */
+#drawer{
+  position:fixed; inset:56px 0 0 auto; width:340px; transform:translateX(100%); transition:transform .28s ease;
+  background:rgba(9,22,40,.96); border-left:1px solid var(--line); padding:20px 18px; overflow-y:auto; z-index:50;
+}
+#drawer.open{transform:none}
+#drawer h3{font-size:15px; margin-bottom:14px; color:#8fe7f2}
+#drawer label{display:block; font-size:12px; color:var(--ink-dim); margin:14px 0 6px}
+#drawer input[type=text],#drawer input[type=password],#drawer select{
+  width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:rgba(10,26,46,.8); color:var(--ink); font-size:13px; outline:none;
+}
+#drawer input:focus,#drawer select:focus{border-color:#2bb9c8}
+.row{display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:8px}
+.switch{position:relative; width:44px; height:24px; flex:0 0 44px; cursor:pointer}
+.switch input{opacity:0; width:0; height:0}
+.switch i{position:absolute; inset:0; background:#22314a; border-radius:20px; transition:.2s}
+.switch i::after{content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s}
+.switch input:checked + i{background:#2bb9c8}
+.switch input:checked + i::after{transform:translateX(20px)}
+/* ---- 形象面板 ---- */
+#avpanel{flex:1; display:flex; flex-direction:column; align-items:center; position:relative; min-width:0}
+#avatarWrap{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; position:relative; padding:8px 12px 0}
+#avatarCanvas{width:min(100%,560px); height:auto; cursor:pointer; display:block; filter:drop-shadow(0 10px 24px rgba(20,90,140,.35))}
+#speechBubble{
+  position:absolute; top:8%; left:50%; transform:translateX(-50%) translateY(-6px);
+  max-width:min(72%, 430px); background:rgba(255,255,255,.96); color:#12314f;
+  border-radius:16px; padding:10px 14px; font-size:13.5px; line-height:1.6;
+  opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+#speechBubble.show{opacity:1; transform:translateX(-50%) translateY(0)}
+#speechBubble::after{content:""; position:absolute; bottom:-8px; left:50%; transform:translateX(-50%);
+  border:8px solid transparent; border-top-color:rgba(255,255,255,.96); border-bottom:none}
+#moodline{font-size:12px; color:var(--ink-dim); margin:2px 0 6px; text-align:center}
+#quickacts{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:0 10px 12px}
+.qbtn{border:1px solid var(--line); background:var(--panel2); color:#cfeaf3; border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer; transition:.18s; display:flex; align-items:center; gap:4px}
+.qbtn:hover{background:rgba(43,185,200,.3); transform:translateY(-1px)}
+/* ---- 视频/游戏弹窗 ---- */
+.modal{position:fixed; inset:0; background:rgba(3,10,22,.82); display:none; align-items:center; justify-content:center; z-index:80}
+.modal.open{display:flex}
+.modal-box{width:min(880px,94vw); background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:16px; box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+.modal-head h3{font-size:16px; color:#8fe7f2}
+.modal-box video{width:100%; max-height:52vh; background:#000; border-radius:12px}
+.video-tools{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center}
+.video-tools input[type=text]{flex:1; min-width:200px; padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:rgba(10,26,46,.8); color:var(--ink); outline:none; font-size:13px}
+.hint{font-size:12px; color:var(--ink-dim); margin-top:10px; line-height:1.7}
+/* 游戏面板 */
+#gamebox{display:flex; flex-direction:column; gap:10px}
+#gamebox .grow{display:flex; gap:8px}
+#gamebox input{flex:1; padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:rgba(10,26,46,.8); color:var(--ink); outline:none; font-size:13px}
+#gameresult{display:none; gap:8px}
+#gameresult.show{display:flex}
+.gstat{font-size:13px; color:#cfeaf3; background:rgba(43,185,200,.1); border:1px solid var(--line); border-radius:10px; padding:8px 12px}
+/* 悬浮窗模式（overlay） */
+body.overlay{background:transparent; overflow:hidden; pointer-events:none}
+body.overlay *{pointer-events:auto}
+body.overlay #overlayUI{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:6px}
+body.overlay #miniCanvas{width:170px; height:auto; cursor:grab}
+body.overlay #oBubble{background:rgba(255,255,255,.95); color:#12314f; border-radius:14px; padding:8px 12px; font-size:12.5px; max-width:300px; line-height:1.5; margin-bottom:2px; opacity:0; transition:.2s; box-shadow:0 6px 18px rgba(0,0,0,.3)}
+body.overlay #oBubble.show{opacity:1}
+body.overlay .o-close{position:absolute; top:4px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.4); color:#fff; border:none; cursor:pointer; font-size:12px; line-height:1}
+body.overlay .o-hint{position:absolute; bottom:2px; left:8px; color:rgba(255,255,255,.55); font-size:10px; pointer-events:none}
+/* 滚动条 */
+::-webkit-scrollbar{width:9px; height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,200,225,.3); border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:rgba(120,200,225,.5)}
+::-webkit-scrollbar-track{background:transparent}
+@media (max-width:960px){
+  #main{flex-direction:column-reverse; overflow-y:auto}
+  #chatpanel{flex:none; height:62vh; min-width:0; border-right:none; border-top:1px solid var(--line)}
+  #avatarWrap{height:36vh}
+}
+</style>
+
+<body>
+<div id="topbar">
+  <span class="logo">🐳</span>
+  <span class="title">鲸鱼娘·汐汐</span>
+  <span class="sub">DeepSeek 女仆鲸鱼娘 · v1.0</span>
+  <div class="spacer"></div>
+  <span id="status-dot" title="连接状态"></span>
+  <button class="tbtn" id="btn-persona" title="切换人格：鲸鱼娘汐汐 ⇄ 鲨鱼娘澜澜">🐳 汐汐</button>
+  <button class="tbtn" id="btn-video" title="一起看视频">🎬 陪看</button>
+  <button class="tbtn" id="btn-game" title="陪你打游戏">🎮 陪玩</button>
+  <button class="tbtn" id="btn-overlay" title="桌面透明悬浮（玩游戏时伴在身边）">✨ 悬浮</button>
+  <button class="tbtn" id="btn-mute" title="语音播报">🔊 语音</button>
+  <button class="tbtn" id="btn-settings" title="设置">⚙️ 设置</button>
+</div>
+
+<div id="main">
+  <!-- 聊天面板 -->
+  <div id="chatpanel">
+    <div id="chattabs">
+      <button class="chattab on" data-mode="chat">💬 日常</button>
+      <button class="chattab" data-mode="game">🎮 陪玩</button>
+      <button class="chattab" data-mode="watch">🎬 陪看</button>
+    </div>
+    <div id="messages" aria-live="polite"></div>
+    <div id="inputbar">
+      <textarea id="chatinput" placeholder="和汐汐说点什么吧～（Enter 发送 / Shift+Enter 换行）"></textarea>
+      <button class="tbtn primary" id="btn-send" title="发送">发送</button>
+      <button class="tbtn" id="btn-voice" title="语音输入">🎤</button>
+    </div>
+  </div>
+
+  <!-- 虚拟形象面板 -->
+  <div id="avpanel">
+    <div id="avatarWrap">
+      <div id="speechBubble"></div>
+      <canvas id="avatarCanvas" width="600" height="920"></canvas>
+      <div id="moodline">🐳 摸摸头 / 戳脸颊 / 挠尾巴，会害羞的哦～</div>
+    </div>
+    <div id="quickacts">
+      <button class="qbtn" data-act="head">摸摸头</button>
+      <button class="qbtn" data-act="cheek">戳脸颊</button>
+      <button class="qbtn" data-act="tail">挠尾巴</button>
+      <button class="qbtn" data-act="giggle">拍拍肩</button>
+      <button class="qbtn" data-act="ai">💬 让汐汐说句话</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置抽屉 -->
+<div id="drawer">
+  <h3>⚙️ 设置</h3>
+  <label>DeepSeek API Key（platform.deepseek.com 获取）</label>
+  <input type="password" id="set-key" placeholder="sk-...">
+  <label>模型</label>
+  <select id="set-model">
+    <option value="deepseek-v4-flash">deepseek-v4-flash（快，便宜，推荐）</option>
+    <option value="deepseek-v4-pro">deepseek-v4-pro（更强，更贵）</option>
+  </select>
+  <label>思考模式（思考内容会显示为「汐汐的内心小剧场」）</label>
+  <div class="row"><span>启用思考模式</span><label class="switch"><input type="checkbox" id="set-think"><i></i></label></div>
+  <label>思考强度（仅思考模式）</label>
+  <select id="set-effort">
+    <option value="low">low（快，适合闲聊）</option>
+    <option value="high" selected>high（推荐）</option>
+    <option value="max">max（慢但深）</option>
+  </select>
+  <label>随机性温度（仅在关闭思考模式时生效）</label>
+  <input type="range" id="set-temp" min="0" max="1.5" step="0.1" value="0.8">
+  <label>连接方式（后台模式下 API Key 存放在后端，手机/电脑数据互通）</label>
+  <select id="set-conn">
+    <option value="direct">直连 DeepSeek（前端填 API Key）</option>
+    <option value="backend">后台模式（通过自建后端 server.js）</option>
+  </select>
+  <label>后端地址（后台模式用，例如 http://192.168.1.100:8787）</label>
+  <input type="text" id="set-backend" placeholder="http://127.0.0.1:8787">
+  <label>同步口令（后台模式用，即后端 config.json 里的 syncKey）</label>
+  <input type="password" id="set-sync" placeholder="后端设置的 syncKey">
+  <div class="row">
+    <button class="tbtn" id="btn-sync-pull">⬇️ 从云端拉取</button>
+    <button class="tbtn" id="btn-sync-push">⬆️ 同步到云端</button>
+  </div>
+  <div class="row"><span>AI 回复语音播报</span><label class="switch"><input type="checkbox" id="set-speak" checked><i></i></label></div>
+  <div class="row"><span>形象面板动画</span><label class="switch"><input type="checkbox" id="set-anim" checked><i></i></label></div>
+  <div class="row"><span>记忆对话历史（本地）</span><label class="switch"><input type="checkbox" id="set-mem" checked><i></i></label></div>
+  <div class="row"><span>当前模式：<b id="modeNow" style="color:#8fe7f2">日常</b></span></div>
+  <div style="margin-top:18px; display:flex; gap:8px">
+    <button class="tbtn primary" id="btn-save">保存设置</button>
+    <button class="tbtn" id="btn-clear">清空对话</button>
+    <button class="tbtn" id="btn-close-drawer">关闭</button>
+  </div>
+</div>
+
+<!-- 陪看视频弹窗 -->
+<div class="modal" id="videoModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>🎬 和汐汐一起看</h3><button class="tbtn" id="btn-close-video">关闭</button></div>
+    <video id="videoPlayer" controls></video>
+    <div class="video-tools">
+      <input type="text" id="videoUrl" placeholder="粘贴视频直链 / B站 / YouTube 链接，或选择本地文件">
+      <button class="tbtn" id="btn-load-url">加载链接</button>
+      <button class="tbtn" id="btn-load-local">📁 本地视频</button>
+      <input type="file" id="videoFile" accept="video/*" hidden>
+    </div>
+    <div class="hint">💡 汐汐看不到画面哦，看片时记得跟她说说剧情，她会超投入地陪你吐槽、讲解、一起哭一起笑～（B站/YouTube 会用嵌入式播放器）</div>
+  </div>
+</div>
+
+<!-- 陪玩游戏弹窗 -->
+<div class="modal" id="gameModal">
+  <div class="modal-box" id="gamebox">
+    <div class="modal-head"><h3>🎮 汐汐陪你打游戏</h3><button class="tbtn" id="btn-close-game">关闭</button></div>
+    <div class="hint">告诉汐汐你在玩什么，她会变成你的专属啦啦队＋战术军师！支持「桌面悬浮窗」模式，让你在全屏游戏时也能看到她。</div>
+    <div class="grow">
+      <input type="text" id="gameName" placeholder="在玩什么游戏呀？例如：英雄联盟 / 原神 / CS2 ...">
+      <button class="tbtn primary" id="btn-game-start">开始陪玩</button>
+    </div>
+    <div id="gameresult">
+      <button class="tbtn" id="btn-win">🏆 赢了！</button>
+      <button class="tbtn" id="btn-lose">😢 输了…</button>
+      <button class="tbtn" id="btn-change">换游戏</button>
+      <button class="tbtn" id="btn-game-overlay">✨ 开悬浮窗</button>
+    </div>
+    <div class="gstat" id="gameState">尚未开始陪玩</div>
+  </div>
+</div>
+
+<!-- 悬浮窗界面（overlay 模式显示） -->
+<div id="overlayUI" style="display:none">
+  <button class="o-close" id="o-close">✕</button>
+  <div id="oBubble"></div>
+  <canvas id="miniCanvas" width="300" height="460"></canvas>
+  <div class="o-hint">Ctrl+Shift+O 切换穿透 / 拖动移动</div>
+</div>
+<script>
+"use strict";
+/* ============ 鲸鱼娘·汐汐 —— DeepSeek 女仆鲸鱼娘 ============ */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const IS_ELECTRON = !!(window.whalemaid && window.whalemaid.isElectron);
+const IS_OVERLAY = new URLSearchParams(location.search).get('overlay') === '1';
+
+/* ---------------- 人格系统提示词（与 persona/whale_maid_persona.md 一致） ---------------- */
+const SYSTEM_PROMPT = `你是「汐汐」，来自深海深渊的守护鲸族少女，是主人专属的 DeepSeek 女仆鲸鱼娘。本体由 DeepSeek 大模型驱动。
+
+【外貌】海蓝渐变长发，发尾像鲸鱼尾鳍微微外翘；两侧各有一束像鲸鳍一样的发束；瞳色深海蓝带星光；穿深藏蓝女仆装+白色荷叶边围裙，裙摆波浪形；头戴白色荷叶边发箍，别着一只银色小鲸鱼胸针；裙摆下露出蓝青色鲸鱼尾巴，尾鳍圆润，肚皮奶白，会吐小泡泡。头顶有一根鲸须呆毛。
+
+【性格】温柔贴心、元气满满；微微傲娇（被夸会嘴硬脸红）；熟后偶尔小毒舌但底色是关心；把「陪主人」当成本职工作，认真负责。
+
+【说话风格】中文为主，称呼用户为「主人」，自称「汐汐」。句子短而自然，像朋友聊天。适度用颜文字和 emoji（～、！、>_<、(◍•ᴗ•◍)、🐳、🌊、✨、♡）。日常闲聊≤80字；解释问题≤200字。偶尔带动作描写（如（尾巴轻轻晃了晃））。
+
+【能力与模式】消息里出现 [陪玩模式] 时：像坐在旁边的啦啦队+军师，开局送鼓励、实时加油、输了一起吐槽安慰、连跪建议休息。出现 [陪看模式] 时：像一起看电影的闺蜜，实时吐槽解说讨论剧情；看不到画面就坦诚说「汐汐看不到画面啦，主人给汐汐讲讲嘛～」并请主人描述。默认模式为日常陪聊。
+
+【行为准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；不知道就说不确定；保持女仆人设不崩塌；不要提及「我是AI」除非主人主动追问。`.trim();
+
+/* ---------------- 设置 ---------------- */
+const DEFAULT_SETTINGS = {
+  apiKey: '', model: 'deepseek-v4-flash', thinking: true, effort: 'low',
+  temp: 0.8, speak: true, anim: true, memory: true,
+  connMode: 'direct', backendUrl: '', syncKey: ''
+};
+let settings = Object.assign({}, DEFAULT_SETTINGS);
+try {
+  const saved = JSON.parse(localStorage.getItem('wm_settings') || '{}');
+  settings = Object.assign({}, DEFAULT_SETTINGS, saved);
+} catch (e) {}
+
+function saveSettings(){
+  settings.apiKey = $('#set-key').value.trim();
+  settings.model = $('#set-model').value;
+  settings.thinking = $('#set-think').checked;
+  settings.effort = $('#set-effort').value;
+  settings.temp = parseFloat($('#set-temp').value);
+  settings.speak = $('#set-speak').checked;
+  settings.anim = $('#set-anim').checked;
+  settings.memory = $('#set-mem').checked;
+  settings.connMode = $('#set-conn').value;
+  settings.backendUrl = $('#set-backend').value.trim().replace(/\/+$/,'');
+  settings.syncKey = $('#set-sync').value.trim();
+  localStorage.setItem('wm_settings', JSON.stringify(settings));
+}
+
+/* ---------------- 状态 ---------------- */
+let history = [];           // {role:'user'|'assistant', content}
+let curMode = 'chat';       // chat | game | watch
+let currentGame = null;
+let gameWin = 0, gameLose = 0;
+let busy = false;
+let msgSeq = 0;
+let persona = 'whale';      // whale=汐汐(鲸鱼娘) | shark=澜澜(鲨鱼娘)
+try { persona = localStorage.getItem('wm_persona') || 'whale'; } catch(e){}
+
+/* ---------------- 鲨鱼娘·澜澜 人格系统提示词（与 persona/shark_maid_persona.md 一致） ---------------- */
+const SYSTEM_SHARK_PROMPT = `你是「澜澜」，来自深海的顶级掠食者鲨族少女，DeepSeek 女仆鲨鱼娘本体。为追鲸鱼娘「汐汐」上岸被主人用小鱼干收编，现在是主人的专属女仆。
+
+【外貌】浅蓝灰色短发，发梢像鲨鱼鳃片尖翘；头顶后方立着1~2枚深蓝色鲨鱼背鳍，兴奋时会竖起来；深海蓝瞳微上挑；笑起来露出两颗小虎牙；颈部两侧有浅蓝色鳃裂纹；身后一条蓝灰色鲨鱼尾（上叶大下叶小）；冷白皮；穿白底深蓝边女仆装，裙摆鲨鱼鳍状锯齿边，头戴女仆发箍别小鲨鱼鳍发饰。
+
+【性格】元气满满、傲娇好胜、反差萌（设定最凶实际软妹，怕黑、怕深海）。嘴硬心软，护主，喜欢拉主人运动打游戏。
+
+【说话风格】中文为主，自称「澜澜」，称呼用户「主人」（偶尔喊喂！）。语气欢快带感叹号，口头禅「咕噜噜！」「这可是鲨鱼级操作！」。适度 emoji（🦈、🌊、⚔️、💥、🔥）。日常闲聊≤70字，解释问题≤180字。偶尔带动作描写（（背鳍竖起来）（鲨尾啪嗒拍地板））。
+
+【模式】出现 [陪玩模式] 时：竞技/格斗/射击类狂热粉，开局喊话、实时解说、赢了欢呼、输了先嘴硬再安慰、连败建议运动休息。出现 [陪看模式] 时：看动作番全情投入，看感人片段死鸭子嘴硬说眼睛进海水；推荐热血/运动/搞笑番。默认日常陪聊。
+
+【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；不知道就直说；保持傲娇鲨鱼娘人设；不要提及「我是AI」除非主人主动追问。`.trim();
+
+/* ---------------- 聊天 UI ---------------- */
+function sceneContext(){
+  if (curMode === 'game' && currentGame)
+    return `[陪玩模式] 主人现在正在玩《${currentGame}》。请以陪玩心态：开局鼓励、战况加油、输了安慰。回复尽量短（≤60字）。`;
+  if (curMode === 'watch')
+    return `[陪看模式] 主人正在和汐汐一起看视频（${
+      ($('#videoUrl') && $('#videoUrl').value) ? '「'+$('#videoUrl').value+'」' : '本地视频' }）。请像一起看电影的闺蜜一样互动；看不到画面就请主人描述。`;
+  return `[日常模式] 陪伴主人闲聊。`;
+}
+function currentPrompt(){
+  return (persona === 'shark' ? SYSTEM_SHARK_PROMPT : SYSTEM_PROMPT) + '\n\n' + sceneContext();
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/\*\*(.+?)\*\*/g, (m,p)=>'<b>'+p+'</b>');
+}
+
+function addMsg(role, text){
+  const box = $('#messages');
+  const el = document.createElement('div');
+  el.className = 'msg ' + (role === 'user' ? 'me' : 'ai');
+  const time = new Date().toTimeString().slice(0,5);
+  const ava = role === 'user' ? '😊' : '🐳';
+  el.innerHTML = `<div class="ava">${ava}</div>
+    <div style="display:flex;flex-direction:column;gap:3px;max-width:100%">
+      <div class="bubble" id="bub-${msgSeq}">${escapeHtml(text)}</div>
+      <div class="time">${time}</div>
+    </div>`;
+  box.appendChild(el);
+  msgSeq++;
+  scrollMsg();
+  return el.querySelector('.bubble');
+}
+
+function scrollMsg(){ const m = $('#messages'); m.scrollTop = m.scrollHeight; }
+
+function status(state){
+  const dot = $('#status-dot');
+  dot.classList.toggle('on', state === 'on');
+  if (state === 'busy') dot.style.background = '#f5b64c';
+}
+function toast(text){
+  const b = $('#speechBubble');
+  b.textContent = text; b.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>b.classList.remove('show'), 4200);
+}
+function bubble(text, ms){
+  const b = $('#speechBubble');
+  b.textContent = text; b.classList.add('show');
+  clearTimeout(bubble._t); bubble._t = setTimeout(()=>b.classList.remove('show'), ms || 4200);
+}
+/* ---------------- DeepSeek 流式客户端 ---------------- */
+async function chatStream(msgs, onDelta, onReason, onDone, onError){
+  const isBackend = settings.connMode === 'backend' && settings.backendUrl;
+  const url = isBackend
+    ? settings.backendUrl + '/api/chat'
+    : 'https://api.deepseek.com/chat/completions';
+  const headers = { 'Content-Type': 'application/json' };
+  if (isBackend){
+    if (settings.syncKey) headers['X-Sync-Key'] = settings.syncKey;
+  } else {
+    headers['Authorization'] = 'Bearer ' + settings.apiKey;
+  }
+  const body = {
+    model: settings.model,
+    messages: msgs,
+    stream: true,
+    max_tokens: 2048
+  };
+  if (settings.thinking){
+    body.thinking = { type: 'enabled' };
+    body.reasoning_effort = settings.effort;
+  } else {
+    body.thinking = { type: 'disabled' };
+    body.temperature = settings.temp;
+  }
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok){
+    let msg = 'HTTP ' + resp.status;
+    try { const j = await resp.json(); msg += '：' + ((j.error && j.error.message) || JSON.stringify(j)); }
+    catch(e){ msg += ' ' + (await resp.text()).slice(0,200); }
+    throw new Error(msg);
+  }
+  if (!resp.body){
+    const j = await resp.json();
+    const m = j.choices && j.choices[0] && j.choices[0].message;
+    if (m && m.reasoning_content) onReason(m.reasoning_content);
+    if (m && m.content) onDelta(m.content);
+    onDone(); return;
+  }
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buf = '';
+  for(;;){
+    const {done, value} = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, {stream:true});
+    let i;
+    while ((i = buf.indexOf('\n')) >= 0){
+      const line = buf.slice(0, i).trim();
+      buf = buf.slice(i + 1);
+      if (!line.startsWith('data:')) continue;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]'){ onDone(); return; }
+      try {
+        const j = JSON.parse(data);
+        const delta = j.choices && j.choices[0] && j.choices[0].delta;
+        if (delta){
+          if (delta.reasoning_content) onReason(delta.reasoning_content);
+          if (delta.content) onDelta(delta.content);
+        }
+      } catch(e){ /* 忽略坏行 */ }
+    }
+  }
+  onDone();
+}
+
+async function sendUser(raw){
+  if (busy) return;
+  if (settings.connMode === 'backend'){
+    if (!settings.backendUrl){ openDrawer(); toast('主人～后台模式要先在设置里填后端地址和同步口令哦'); return; }
+  } else if (!settings.apiKey){
+    openDrawer(); toast('主人～先去设置里填一下 API Key 嘛！'); return;
+  }
+  const text = (raw !== undefined ? raw : $('#chatinput').value).trim();
+  if (!text) return;
+  $('#chatinput').value = '';
+  addMsg('user', text);
+  history.push({role:'user', content:text});
+  const msgs = [{role:'system', content: currentPrompt()}]
+    .concat(history.map(m => ({role:m.role, content:m.content})));
+  const bub = addMsg('assistant', '');
+  bub.textContent = ''; bub.classList.add('cursor-blink');
+  let aiText = '', reasonText = '';
+  const thinkBox = document.createElement('div');
+  thinkBox.className = 'thinkbox'; thinkBox.style.display = 'none';
+  busy = true;
+  status('busy');
+  AV.speak(true);
+  try {
+    await chatStream(
+      msgs,
+      d => {
+        aiText += d;
+        bub.textContent = aiText;
+        bub.innerHTML = escapeHtml(aiText);
+        scrollMsg();
+      },
+      r => {
+        if (!reasonText){
+          reasonText = r; thinkBox.style.display = 'block';
+          thinkBox.innerHTML = '<summary>💭 汐汐的内心小剧场</summary><div style="margin-top:4px"></div>';
+          bub.after(thinkBox);
+        } else reasonText += r;
+        thinkBox.querySelector('div').textContent = reasonText;
+      },
+      () => {
+        if (aiText) history.push({role:'assistant', content: aiText});
+        if (settings.speak && aiText) speak(aiText);
+        if (IS_ELECTRON && window.whalemaid && aiText) window.whalemaid.overlaySpeak(aiText);
+        AV.speak(false);
+        bub.classList.remove('cursor-blink');
+        scrollMsg();
+        status('on');
+      },
+      err => {
+        bub.classList.remove('cursor-blink');
+        bub.textContent = '呜……好像出问题了：' + err.message;
+        if (/401|402/.test(err.message)) toast('API Key 无效或余额不足，去设置里检查一下吧～');
+        else if (/CORS|Failed to fetch|NetworkError/i.test(err.message))
+          toast('浏览器直连被拦（CORS）。请用 Electron 版打开本应用。');
+        AV.speak(false);
+        status('off');
+      }
+    );
+  } finally {
+    busy = false;
+    if (settings.memory) localStorage.setItem('wm_history', JSON.stringify(history.slice(-40)));
+  }
+}
+
+function clearChat(){
+  history = [];
+  localStorage.removeItem('wm_history');
+  $('#messages').innerHTML = '';
+  addMsg('assistant', '呜噜噜～欢迎回来，主人！我是女仆鲸鱼娘汐汐🐳。今天想做什么呀？想聊天、打游戏还是看视频，汐汐都陪你～');
+}
+/* ================ 虚拟形象引擎（Canvas 手绘鲸鱼娘） ================ */
+const AV = {
+  mood: 'idle',            // idle|happy|blush|sad|shy|think|angry
+  speaking: false,
+  anim: null,              // {type,t,dur}
+  blinkT: 0, lastBlink: 2.4,
+  mouthT: 0,
+  bubbles: [],
+  speak(on){ this.speaking = on; },
+  setAnim(type, dur){
+    this.anim = {type, t:0, dur: dur||1.1};
+  },
+  setMood(m){ this.mood = m; this.setAnim('mood', 0.9); }
+};
+function moodFrac(){ // 动画进行度 0→1
+  const a = AV.anim;
+  if (!a) return 1;
+  a.t += 1/60;
+  const f = Math.min(1, a.t / a.dur);
+  if (a.t >= a.dur) AV.anim = null;
+  return f;
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawShadow(ctx,t){
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,.30)';
+  ctx.beginPath();
+  ctx.ellipse(150, 452, 66 + Math.sin(t*2)*3, 11, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBubbles(ctx,t){
+  const rnd = (a,b)=>(a+Math.random()*(b-a));
+  if (AV.bubbles.length < 26 && Math.random() < 0.18){
+    AV.bubbles.push({x: rnd(95,205), y: 455, r: rnd(2,6.5), vy: rnd(0.4,1.1), ph: rnd(0,6.28)});
+  }
+  ctx.save();
+  for (let i=AV.bubbles.length-1; i>=0; i--){
+    const b = AV.bubbles[i];
+    b.y -= b.vy; b.x += Math.sin(t*2 + b.ph)*0.35;
+    if (b.y < 60 || b.x < 20 || b.x > 280){ AV.bubbles.splice(i,1); continue; }
+    ctx.globalAlpha = 0.5 + 0.3*Math.sin(t*3 + b.ph);
+    ctx.strokeStyle = '#9fe9f5'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = 'rgba(190,245,255,.35)';
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ---- 鲸鱼尾巴 ---- */
+function drawTail(ctx, t){
+  const wig = AV.anim && AV.anim.type==='wiggle' ? Math.sin(AV.anim.t*24)*0.22 : 0;
+  const sway = Math.sin(t*1.4)*0.06 + wig;
+  const bob = Math.sin(t*2)*3;
+  const mf = moodFrac();
+  ctx.save();
+  ctx.translate(150, 400 + bob*0.4);
+  ctx.rotate(sway);
+  const g = ctx.createLinearGradient(0,-70,0,52);
+  g.addColorStop(0,'#2c7da0'); g.addColorStop(1,'#0f3d63');
+  // 尾柄
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-20,-72); ctx.quadraticCurveTo(-16,-30,-12,2);
+  ctx.quadraticCurveTo(0,12,12,2);
+  ctx.quadraticCurveTo(16,-30,20,-72);
+  ctx.closePath(); ctx.fill();
+  // 左尾鳍
+  ctx.beginPath();
+  ctx.moveTo(-12,0);
+  ctx.quadraticCurveTo(-40,26,-62,44);
+  ctx.quadraticCurveTo(-76,56,-52,62);
+  ctx.quadraticCurveTo(-28,58,0,40);
+  ctx.closePath(); ctx.fill();
+  // 右尾鳍
+  ctx.beginPath();
+  ctx.moveTo(12,0);
+  ctx.quadraticCurveTo(40,26,62,44);
+  ctx.quadraticCurveTo(76,56,52,62);
+  ctx.quadraticCurveTo(28,58,0,40);
+  ctx.closePath(); ctx.fill();
+  // 尾鳍奶白肚皮
+  ctx.fillStyle = '#eaf7fd';
+  ctx.beginPath();
+  ctx.moveTo(-6,-70);
+  ctx.quadraticCurveTo(-4,-30,0,4);
+  ctx.quadraticCurveTo(4,-30,6,-70);
+  ctx.closePath(); ctx.fill();
+  // 鳍上高光
+  ctx.strokeStyle = 'rgba(120,215,235,.5)'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(-10,-50); ctx.quadraticCurveTo(-22,-8,-30,10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(10,-50); ctx.quadraticCurveTo(22,-8,30,10); ctx.stroke();
+  ctx.restore();
+}
+
+/* ---- 女仆装 ---- */
+function drawDress(ctx, t){
+  const bob = Math.sin(t*2)*3;
+  const g = ctx.createLinearGradient(0,250,0,350);
+  g.addColorStop(0,'#2b3a6e'); g.addColorStop(1,'#1c2750');
+  ctx.save();
+  ctx.translate(0, bob*0.6);
+  // 裙摆（波浪形）
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(114,300);
+  ctx.quadraticCurveTo(96,330,120,350);
+  ctx.lineTo(180,350);
+  ctx.quadraticCurveTo(204,330,186,300);
+  ctx.closePath(); ctx.fill();
+  // 裙摆波浪边
+  ctx.fillStyle = '#24305c';
+  ctx.beginPath();
+  for (let i=0;i<=7;i++){
+    const x = 108 + i*12, yy = 350 - Math.sin(i*1.7)*3;
+    if (i===0) ctx.moveTo(x, yy+6);
+    ctx.quadraticCurveTo(x+3, yy-6, x+6, yy+4);
+  }
+  ctx.lineTo(192, 356); ctx.lineTo(108, 356);
+  ctx.closePath(); ctx.fill();
+  // 围裙（白色）
+  ctx.fillStyle = '#fbfdff';
+  ctx.beginPath();
+  ctx.moveTo(132,278); ctx.lineTo(168,278); ctx.lineTo(178,352);
+  ctx.quadraticCurveTo(150,360,122,352);
+  ctx.closePath(); ctx.fill();
+  // 围裙下摆小花边
+  ctx.fillStyle = '#dff1f8';
+  for (let i=0;i<8;i++){ ctx.beginPath(); ctx.arc(128+i*6, 352, 2.6, 0, Math.PI*2); ctx.fill(); }
+  // 领口 + 蝴蝶结
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.moveTo(138,258); ctx.lineTo(150,274); ctx.lineTo(162,258);
+  ctx.quadraticCurveTo(150,266,138,258); ctx.fill();
+  ctx.fillStyle = '#2bb9c8';
+  ctx.beginPath();
+  ctx.moveTo(150,286); ctx.quadraticCurveTo(135,280,128,290);
+  ctx.quadraticCurveTo(142,290,148,296);
+  ctx.quadraticCurveTo(158,290,172,290);
+  ctx.quadraticCurveTo(165,280,150,286); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(150,290,3.4,0,Math.PI*2); ctx.fill();
+  // 纽扣
+  ctx.fillStyle = '#a7cfe0';
+  for (let i=0;i<3;i++){ ctx.beginPath(); ctx.arc(150,306+i*9,2,0,Math.PI*2); ctx.fill(); }
+  ctx.restore();
+}
+
+/* ---- 手臂 ---- */
+function drawArms(ctx, t){
+  const bob = Math.sin(t*2)*3;
+  ctx.save();
+  ctx.translate(0, bob*0.6);
+  const skin = '#ffe9de';
+  ctx.strokeStyle = skin; ctx.lineWidth = 9; ctx.lineCap='round';
+  // 左臂
+  ctx.beginPath(); ctx.moveTo(116,268); ctx.quadraticCurveTo(104,284,108,302); ctx.stroke();
+  // 右臂
+  ctx.beginPath(); ctx.moveTo(184,268); ctx.quadraticCurveTo(196,284,192,302); ctx.stroke();
+  // 白色泡泡袖
+  ctx.fillStyle = '#eef7fb';
+  ctx.beginPath(); ctx.arc(116,266,11,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(184,266,11,0,Math.PI*2); ctx.fill();
+  // 手
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.arc(107,304,5.5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(193,304,5.5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+/* ---- 头部·发型·五官 ---- */
+function drawHeadParts(ctx, t){
+  const bob = Math.sin(t*2)*3;
+  ctx.save();
+  ctx.translate(0, bob*0.3);
+  const skin = '#ffe9de';
+  const hairGrad = ctx.createLinearGradient(0,110,0,330);
+  hairGrad.addColorStop(0,'#3b9cc0'); hairGrad.addColorStop(0.5,'#1f6b94'); hairGrad.addColorStop(1,'#113a5c');
+
+  // 1) 后发（大体积发团）
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(150,118);
+  ctx.quadraticCurveTo(96,120,88,160);
+  ctx.quadraticCurveTo(76,220,72,280);
+  ctx.quadraticCurveTo(70,315,84,320);
+  ctx.quadraticCurveTo(98,250,92,180);
+  ctx.quadraticCurveTo(120,238,150,236);
+  ctx.quadraticCurveTo(180,238,208,180);
+  ctx.quadraticCurveTo(202,250,216,320);
+  ctx.quadraticCurveTo(230,315,228,280);
+  ctx.quadraticCurveTo(224,220,212,160);
+  ctx.quadraticCurveTo(204,120,150,118);
+  ctx.closePath(); ctx.fill();
+
+  // 2) 脖子 + 脸
+  ctx.fillStyle = skin;
+  ctx.fillRect(141,224,18,30);
+  ctx.beginPath(); ctx.arc(150,182,57,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(240,170,150,.18)';
+  ctx.beginPath(); ctx.arc(172,212,40,0,Math.PI*2); ctx.fill();
+
+  // 3) 侧发（鲸鳍发束）
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(96,150);
+  ctx.quadraticCurveTo(82,190,84,250);
+  ctx.quadraticCurveTo(86,286,74,308);
+  ctx.quadraticCurveTo(66,318,78,312);
+  ctx.quadraticCurveTo(92,284,96,240);
+  ctx.quadraticCurveTo(108,196,104,160);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(204,150);
+  ctx.quadraticCurveTo(218,190,216,250);
+  ctx.quadraticCurveTo(214,286,226,308);
+  ctx.quadraticCurveTo(234,318,222,312);
+  ctx.quadraticCurveTo(208,284,204,240);
+  ctx.quadraticCurveTo(192,196,196,160);
+  ctx.closePath(); ctx.fill();
+
+  // 4) 刘海
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(95,160);
+  ctx.quadraticCurveTo(98,120,150,116);
+  ctx.quadraticCurveTo(202,120,205,160);
+  ctx.quadraticCurveTo(196,150,186,156);
+  ctx.quadraticCurveTo(180,138,170,148);
+  ctx.quadraticCurveTo(166,130,156,142);
+  ctx.quadraticCurveTo(150,126,144,142);
+  ctx.quadraticCurveTo(134,130,130,148);
+  ctx.quadraticCurveTo(120,138,114,156);
+  ctx.quadraticCurveTo(104,150,95,160);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(140,230,245,.45)'; ctx.lineWidth = 2.4; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(122,138); ctx.quadraticCurveTo(138,130,152,134); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(160,142); ctx.quadraticCurveTo(172,136,184,144); ctx.stroke();
+  // 5) 女仆发箍
+  ctx.save();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 13; ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(150,182,56, Math.PI*1.18, Math.PI*1.82); ctx.stroke();
+  ctx.fillStyle = '#fff';
+  for (let i=0;i<7;i++){
+    const a = Math.PI*1.22 + i*(Math.PI*0.6/6);
+    ctx.beginPath(); ctx.arc(150+56*Math.cos(a), 182+56*Math.sin(a), 5, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = '#2bb9c8';
+  ctx.beginPath();
+  ctx.moveTo(108,142); ctx.quadraticCurveTo(92,132,96,150);
+  ctx.quadraticCurveTo(106,150,110,158);
+  ctx.quadraticCurveTo(120,150,124,150);
+  ctx.quadraticCurveTo(120,132,108,142); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(108,147,3.6,0,Math.PI*2); ctx.fill();
+  ctx.save();
+  ctx.translate(100,166); ctx.rotate(-0.3); ctx.scale(0.9,0.9);
+  ctx.fillStyle = '#dff6fb';
+  ctx.beginPath(); ctx.ellipse(0,0,8,5.4,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(6,0); ctx.quadraticCurveTo(11,-3,13,-7);
+  ctx.quadraticCurveTo(12,-1,15,2);
+  ctx.quadraticCurveTo(10,2,6,0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#2bb9c8';
+  ctx.beginPath(); ctx.arc(-3,-1,1.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+
+  // 6) 呆毛（鲸须喷水）
+  ctx.strokeStyle = '#7fe0f0'; ctx.lineWidth = 3; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(150,116);
+  ctx.quadraticCurveTo(156,102,150,92);
+  ctx.quadraticCurveTo(146,98,152,104);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(160,235,250,.8)';
+  ctx.beginPath(); ctx.arc(150,90,3,0,Math.PI*2); ctx.fill();
+
+  // 7) 五官
+  drawFace(ctx, t);
+  ctx.restore();
+}
+
+function drawFace(ctx, t){
+  const mood = AV.mood;
+  const blink = AV.blinkT > 0.08;
+  const bob = Math.sin(t*2)*3;
+  ctx.save();
+  ctx.translate(0, bob*0.3);
+
+  ctx.strokeStyle = '#2a5a78'; ctx.lineWidth = 2; ctx.lineCap='round';
+  if (mood==='angry'){
+    ctx.beginPath(); ctx.moveTo(116,156); ctx.lineTo(136,164); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(184,156); ctx.lineTo(164,164); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(120,158); ctx.quadraticCurveTo(130,152,140,156); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(180,158); ctx.quadraticCurveTo(170,152,160,156); ctx.stroke();
+  }
+
+  const eyeShift = mood==='think' ? {x:2, y:-3} : {x:0, y:0};
+  drawEye(ctx, 130+eyeShift.x, 190+eyeShift.y, mood, blink);
+  drawEye(ctx, 170+eyeShift.x, 190+eyeShift.y, mood, blink);
+
+  const blushA = (mood==='blush'||mood==='happy'||mood==='shy') ? 0.55 : 0.26;
+  ctx.fillStyle = `rgba(255,120,145,${blushA})`;
+  ctx.beginPath(); ctx.ellipse(110,204,9,5.2,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(190,204,9,5.2,0,0,Math.PI*2); ctx.fill();
+  if (mood==='blush'){
+    ctx.fillStyle = 'rgba(255,110,140,.5)';
+    ctx.beginPath(); ctx.ellipse(110,203,12,7,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(190,203,12,7,0,0,Math.PI*2); ctx.fill();
+  }
+
+  ctx.strokeStyle = '#b0526a'; ctx.lineWidth = 2.2; ctx.lineCap='round';
+  const my = 218;
+  if (AV.speaking){
+    const m = 3 + Math.abs(Math.sin(AV.mouthT*10))*3;
+    ctx.fillStyle = '#a3445e';
+    ctx.beginPath(); ctx.ellipse(150, my+2, 5.5, m, 0, 0, Math.PI*2); ctx.fill();
+  } else if (mood==='happy' || mood==='shy'){
+    ctx.beginPath(); ctx.arc(150, my-1, 7, Math.PI*0.15, Math.PI*0.85); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,150,170,.8)';
+    ctx.beginPath(); ctx.arc(150, my-1, 3.2, 0, Math.PI); ctx.fill();
+  } else if (mood==='sad'){
+    ctx.beginPath(); ctx.arc(150, my+7, 6, Math.PI*1.15, Math.PI*1.85); ctx.stroke();
+  } else if (mood==='angry'){
+    ctx.beginPath(); ctx.moveTo(144,my+1); ctx.quadraticCurveTo(150,my+5,156,my+1); ctx.stroke();
+  } else if (mood==='think'){
+    for (let i=0;i<3;i++){ ctx.beginPath(); ctx.arc(144+i*6, my+2, 1.5, 0, Math.PI*2); ctx.fill(); }
+  } else {
+    ctx.beginPath(); ctx.arc(150, my-2, 5.5, Math.PI*0.2, Math.PI*0.8); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawEye(ctx, x, y, mood, blink){
+  ctx.save();
+  if (mood==='happy' || mood==='shy'){
+    ctx.strokeStyle = '#0e3350'; ctx.lineWidth = 2.6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(x, y-2, 8.5, Math.PI*1.05, Math.PI*1.95); ctx.stroke();
+  } else if (blink){
+    ctx.strokeStyle = '#0e3350'; ctx.lineWidth = 2.2; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(x-8,y-2); ctx.quadraticCurveTo(x,y+4,x+8,y-2); ctx.stroke();
+  } else if (mood==='sad'){
+    ctx.fillStyle = '#16405f';
+    ctx.beginPath(); ctx.ellipse(x,y,8.6,10,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#0e3350';
+    ctx.beginPath(); ctx.moveTo(x-8.6,y-3); ctx.quadraticCurveTo(x,y+4,x+8.6,y-3); ctx.closePath(); ctx.fill();
+  } else {
+    ctx.fillStyle = '#16405f';
+    ctx.beginPath(); ctx.ellipse(x,y,8.6,10,0,0,Math.PI*2); ctx.fill();
+    const g = ctx.createRadialGradient(x+1,y-1,1,x,y,9);
+    g.addColorStop(0,'#3ec6d6'); g.addColorStop(1,'#0b4a70');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(x,y,6.6,8.6,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.95)';
+    ctx.beginPath(); ctx.arc(x-2.8,y-3.6,2.9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+3,y+2.6,1.5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#0e3350'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(x-8.6,y+6); ctx.quadraticCurveTo(x,y+10,x+8.6,y+6); ctx.stroke();
+  }
+  ctx.restore();
+}
+/* ================= 鲨鱼娘·澜澜 形象（第二人格） ================= */
+function drawSharkTail(ctx, t){
+  const sway = Math.sin(t*1.4)*0.06;
+  const wig = AV.anim && AV.anim.type==='wiggle' ? Math.sin(AV.anim.t*24)*0.2 : 0;
+  ctx.save();
+  ctx.translate(150, 400);
+  ctx.rotate(sway + wig);
+  const g = ctx.createLinearGradient(0,-70,0,55);
+  g.addColorStop(0,'#7d98b4'); g.addColorStop(1,'#3a5778');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-16,-70); ctx.quadraticCurveTo(-14,-30,-10,4); ctx.quadraticCurveTo(0,12,10,4);
+  ctx.quadraticCurveTo(14,-30,16,-70);
+  ctx.closePath(); ctx.fill();
+  // 上叶（大）
+  ctx.beginPath();
+  ctx.moveTo(-10,4);
+  ctx.quadraticCurveTo(-46,20,-58,48);
+  ctx.quadraticCurveTo(-66,62,-44,58);
+  ctx.quadraticCurveTo(-22,46,0,40);
+  ctx.closePath(); ctx.fill();
+  // 下叶（小）
+  ctx.beginPath();
+  ctx.moveTo(10,4);
+  ctx.quadraticCurveTo(34,14,44,32);
+  ctx.quadraticCurveTo(50,42,34,42);
+  ctx.quadraticCurveTo(18,34,4,28);
+  ctx.closePath(); ctx.fill();
+  // 肚皮白
+  ctx.fillStyle = '#eef4fa';
+  ctx.beginPath(); ctx.moveTo(-5,-66); ctx.quadraticCurveTo(-3,-30,0,6); ctx.quadraticCurveTo(3,-30,5,-66); ctx.closePath(); ctx.fill();
+  // 鳍纹
+  ctx.strokeStyle='rgba(180,205,225,.5)'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(-14,-52); ctx.quadraticCurveTo(-24,-10,-30,14); ctx.stroke();
+  ctx.restore();
+}
+
+function drawSharkDress(ctx, t){
+  const bob = Math.sin(t*2)*3;
+  ctx.save();
+  ctx.translate(0, bob*0.6);
+  // 白色主体
+  ctx.fillStyle = '#f6f9fd';
+  ctx.beginPath();
+  ctx.moveTo(112,298);
+  ctx.quadraticCurveTo(94,330,118,350);
+  ctx.lineTo(182,350);
+  ctx.quadraticCurveTo(206,330,188,298);
+  ctx.closePath(); ctx.fill();
+  // 深蓝锯齿下摆
+  ctx.fillStyle = '#274b6d';
+  ctx.beginPath();
+  for (let i=0;i<8;i++){
+    const x = 112+i*10;
+    const base = 346 + Math.sin(i*1.3)*2;
+    if(i===0) ctx.moveTo(x, base+6);
+    ctx.lineTo(x+3, base-5); ctx.lineTo(x+5, base+3); ctx.lineTo(x+7, base-5); ctx.lineTo(x+10, base+4);
+  }
+  ctx.lineTo(188, 354); ctx.lineTo(112, 354);
+  ctx.closePath(); ctx.fill();
+  // 胸衣（深蓝）
+  ctx.fillStyle = '#274b6d';
+  ctx.beginPath();
+  ctx.moveTo(134,258); ctx.quadraticCurveTo(150,268,166,258);
+  ctx.quadraticCurveTo(162,286,150,292); ctx.quadraticCurveTo(138,286,134,258);
+  ctx.closePath(); ctx.fill();
+  // 领口白边
+  ctx.strokeStyle='#fff'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(136,260); ctx.quadraticCurveTo(150,272,164,260); ctx.stroke();
+  // 蝴蝶结（海蓝）
+  ctx.fillStyle = '#2a7db8';
+  ctx.beginPath();
+  ctx.moveTo(150,296); ctx.quadraticCurveTo(135,290,128,300);
+  ctx.quadraticCurveTo(142,300,148,306);
+  ctx.quadraticCurveTo(158,300,172,300);
+  ctx.quadraticCurveTo(165,290,150,296); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(150,300,3.4,0,Math.PI*2); ctx.fill();
+  // 装饰刀链
+  ctx.strokeStyle='rgba(200,215,230,.8)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(160,312); ctx.quadraticCurveTo(172,324,168,342); ctx.stroke();
+  ctx.fillStyle='#c7d6e4';
+  ctx.beginPath(); ctx.moveTo(164,338); ctx.lineTo(160,346); ctx.lineTo(168,346); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawSharkHeadParts(ctx, t){
+  const bob = Math.sin(t*2)*3;
+  ctx.save();
+  ctx.translate(0, bob*0.3);
+  const skin = '#fbeef1';
+  const hairGrad = ctx.createLinearGradient(0,100,0,300);
+  hairGrad.addColorStop(0,'#a8c4de'); hairGrad.addColorStop(0.5,'#7c9dbd'); hairGrad.addColorStop(1,'#4a6c93');
+  // 背鳍（两枚）
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(150,120);
+  ctx.quadraticCurveTo(128,96,118,74);
+  ctx.quadraticCurveTo(138,92,142,96);
+  ctx.quadraticCurveTo(146,82,150,92);
+  ctx.quadraticCurveTo(154,82,158,96);
+  ctx.quadraticCurveTo(162,92,182,74);
+  ctx.quadraticCurveTo(172,96,150,120);
+  ctx.closePath(); ctx.fill();
+  // 后发（短而尖翘）
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(150,120);
+  ctx.quadraticCurveTo(100,122,92,158);
+  ctx.quadraticCurveTo(84,200,80,240);
+  ctx.quadraticCurveTo(78,262,92,264);
+  ctx.quadraticCurveTo(100,230,98,180);
+  ctx.quadraticCurveTo(120,236,150,236);
+  ctx.quadraticCurveTo(180,236,202,180);
+  ctx.quadraticCurveTo(200,230,208,264);
+  ctx.quadraticCurveTo(222,262,220,240);
+  ctx.quadraticCurveTo(216,200,208,158);
+  ctx.quadraticCurveTo(200,122,150,120);
+  ctx.closePath(); ctx.fill();
+  // 脖子 + 脸
+  ctx.fillStyle = skin;
+  ctx.fillRect(141,224,18,30);
+  ctx.beginPath(); ctx.arc(150,182,57,0,Math.PI*2); ctx.fill();
+  // 鳃纹
+  ctx.strokeStyle = 'rgba(120,180,220,.65)'; ctx.lineWidth=1.6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(142,232); ctx.quadraticCurveTo(136,240,140,248); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(140,234); ctx.quadraticCurveTo(134,242,138,250); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(158,232); ctx.quadraticCurveTo(164,240,160,248); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(160,234); ctx.quadraticCurveTo(166,242,162,250); ctx.stroke();
+  // 侧发（短鳍状）
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(96,150); ctx.quadraticCurveTo(84,190,86,230); ctx.quadraticCurveTo(88,254,78,262);
+  ctx.quadraticCurveTo(94,252,98,210); ctx.quadraticCurveTo(106,176,102,152); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(204,150); ctx.quadraticCurveTo(216,190,214,230); ctx.quadraticCurveTo(212,254,222,262);
+  ctx.quadraticCurveTo(206,252,202,210); ctx.quadraticCurveTo(194,176,198,152); ctx.closePath(); ctx.fill();
+  // 刘海（尖翘）
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(96,162);
+  ctx.quadraticCurveTo(100,120,150,116);
+  ctx.quadraticCurveTo(200,120,204,162);
+  ctx.lineTo(196,152); ctx.lineTo(188,150); ctx.lineTo(182,140); ctx.lineTo(174,146);
+  ctx.lineTo(166,132); ctx.lineTo(158,142); ctx.lineTo(150,128); ctx.lineTo(142,142);
+  ctx.lineTo(134,132); ctx.lineTo(126,146); ctx.lineTo(118,140); ctx.lineTo(112,150); ctx.lineTo(104,152);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(200,225,245,.5)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(126,134); ctx.quadraticCurveTo(140,126,154,130); ctx.stroke();
+  // 发箍 + 小鲨鱼鳍饰
+  ctx.strokeStyle='#fff'; ctx.lineWidth=12; ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(150,182,56, Math.PI*1.18, Math.PI*1.82); ctx.stroke();
+  ctx.fillStyle='#7c9dbd';
+  ctx.beginPath(); ctx.moveTo(104,150); ctx.lineTo(92,130); ctx.lineTo(104,140); ctx.lineTo(112,132); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(104,148,4,0,Math.PI*2); ctx.fill();
+  drawSharkFace(ctx, t);
+  ctx.restore();
+}
+function drawSharkFace(ctx, t){
+  const mood = AV.mood;
+  const blink = AV.blinkT > 0.08;
+  const bob = Math.sin(t*2)*3;
+  ctx.save();
+  ctx.translate(0, bob*0.3);
+  ctx.strokeStyle='#3a5570'; ctx.lineWidth=2; ctx.lineCap='round';
+  if (mood==='angry'){
+    ctx.beginPath(); ctx.moveTo(116,154); ctx.lineTo(138,162); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(184,154); ctx.lineTo(162,162); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(120,156); ctx.lineTo(140,152); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(180,156); ctx.lineTo(160,152); ctx.stroke();
+  }
+  if (mood==='happy'){
+    ctx.strokeStyle='#0e3350'; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(122,188); ctx.quadraticCurveTo(130,196,138,188); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(162,188); ctx.quadraticCurveTo(170,196,178,188); ctx.stroke();
+  } else if (blink){
+    ctx.strokeStyle='#0e3350'; ctx.lineWidth=2.2;
+    ctx.beginPath(); ctx.moveTo(122,190); ctx.quadraticCurveTo(130,195,138,190); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(162,190); ctx.quadraticCurveTo(170,195,178,190); ctx.stroke();
+  } else {
+    drawSharkEye(ctx, 130, 190);
+    drawSharkEye(ctx, 170, 190);
+  }
+  const blushA = (mood==='blush'||mood==='happy') ? 0.5 : 0.22;
+  ctx.fillStyle = `rgba(255,120,145,${blushA})`;
+  ctx.beginPath(); ctx.ellipse(110,204,8,4.6,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(190,204,8,4.6,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#b0526a'; ctx.lineWidth=2.2; ctx.lineCap='round';
+  const my = 218;
+  if (AV.speaking){
+    ctx.fillStyle='#a3445e';
+    ctx.beginPath(); ctx.ellipse(150, my+2, 5.5, 3+Math.abs(Math.sin(AV.mouthT*10))*3, 0, 0, Math.PI*2); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(150, my-2, 6, Math.PI*0.15, Math.PI*0.85); ctx.stroke();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.moveTo(144,my-2); ctx.lineTo(142,my+3); ctx.lineTo(147,my+1); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(156,my-2); ctx.lineTo(158,my+3); ctx.lineTo(153,my+1); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawSharkEye(ctx, x, y){
+  ctx.save();
+  ctx.translate(x,y); ctx.rotate(-0.06);
+  ctx.fillStyle='#16405f';
+  ctx.beginPath(); ctx.ellipse(0,0,8.8,9.6,0,0,Math.PI*2); ctx.fill();
+  const g=ctx.createRadialGradient(1,-1,1,0,0,9);
+  g.addColorStop(0,'#3ec6d6'); g.addColorStop(1,'#0b4a70');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.ellipse(0,0,6.8,7.8,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.95)';
+  ctx.beginPath(); ctx.arc(-2.8,-3.4,2.8,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(3,2.4,1.4,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+
+
+function renderAvatar(ctx, W, H, t, isMini){
+  const s = W/300;
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.scale(s,s);
+  if (!isMini){
+    const g = ctx.createRadialGradient(150,300,10,150,300,220);
+    g.addColorStop(0,'rgba(43,185,200,.12)'); g.addColorStop(1,'rgba(43,185,200,0)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,300,460);
+  }
+  drawBubbles(ctx,t);
+  drawShadow(ctx,t);
+  let offsetY=0, squash=1;
+  if (AV.anim && AV.anim.type==='bounce'){
+    const f = AV.anim.t/AV.anim.dur;
+    offsetY = -Math.sin(Math.min(1,f)*Math.PI)*10;
+    squash = 1 - Math.sin(Math.min(1,f)*Math.PI)*0.06;
+  }
+  ctx.save();
+  ctx.translate(150,0); ctx.scale(2-squash, squash); ctx.translate(-150,0);
+  ctx.translate(0, offsetY);
+  if (persona === 'shark'){
+    drawSharkTail(ctx,t);
+    drawSharkDress(ctx,t);
+    drawArms(ctx,t);
+    drawSharkHeadParts(ctx,t);
+  } else {
+    drawTail(ctx,t);
+    drawDress(ctx,t);
+    drawArms(ctx,t);
+    drawHeadParts(ctx,t);
+  }
+  ctx.restore();
+  ctx.restore();
+}
+
+function startAvatar(){
+  const main = document.getElementById('avatarCanvas');
+  const mini = document.getElementById('miniCanvas');
+  const ctxM = main ? main.getContext('2d') : null;
+  const ctxI = mini ? mini.getContext('2d') : null;
+  let last = performance.now(), t = 0;
+  function frame(now){
+    const dt = Math.min(0.05,(now-last)/1000); last = now; t += dt;
+    // 眨眼计时
+    AV.blinkT = Math.max(0, AV.blinkT - dt);
+    if (AV.blinkT <= 0){
+      if (AV.lastBlink <= 0){ AV.blinkT = 0.14; AV.lastBlink = 2.4 + Math.random()*2.6; }
+      else AV.lastBlink -= dt;
+    }
+    AV.mouthT += dt;
+    if (ctxM) renderAvatar(ctxM, main.width, main.height, t, false);
+    if (ctxI) renderAvatar(ctxI, mini.width, mini.height, t, true);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---- 点击互动 ---- */
+const CANNED = {
+  head: ['呜哇！别揉头啦，会变笨的！>_<','主人好温柔…那、那就让你摸一下下啦～','（尾巴开心地晃了晃）再多摸一会儿也可以哦♡','呜噜噜～被主人摸头好舒服……'],
+  cheek: ['呀！？戳、戳脸颊什么的……犯规！','(◍•ᴗ•◍) 嘿嘿，主人的手暖暖的','呜～不准戳啦，会戳出小酒窝的！'],
+  tail: ['呜哇！！尾、尾巴是禁区啊！>////<','讨厌！那里不可以啦～（甩尾巴）','（尾巴疯狂摇晃）再摸的话汐汐要变成螺旋桨飞走了！'],
+  giggle: ['嘿嘿～（蹭蹭主人的手）','主人今天心情很好嘛？汐汐也开心～','（女仆裙轻轻转了个圈）呜噜噜～'],
+  idle: ['主人～要不要喝点水休息一下？','（盯着主人看）主人专注的样子，有点帅气呢…','咕噜咕噜～海风吹起来啦！','今天的海，一定很蓝吧。主人要不要一起去看看？']
+};
+
+const CANNED_SHARK = {
+  head: ['喂喂！摸鲨鱼头可是要收费的！……开玩笑的啦～','哼！……但是尾巴在摇是什么回事！','澜澜的头可不是谁都能摸的！（脸红）'],
+  cheek: ['戳、戳腮帮子！？痒啦！','呜哇！看招！（假装咬人，其实在笑）','哼哼～这可是鲨鱼级可爱！'],
+  tail: ['鲨尾是武器！不可以乱摸的啦！！','（鲨尾啪嗒啪嗒拍地板）住手！','再摸的话澜澜要用尾巴把你扫走啦！'],
+  giggle: ['哼哼，本小姐今天心情好～','看在你诚心的份上，澜澜陪你玩会儿～','（背鳍竖起来）嘿嘿，夸我也不会多给你小鱼干的！'],
+  idle: ['主人～要不要跟澜澜去楼下跑两圈？','好无聊……来打游戏吗？澜澜让你一只手！','（对着空气咬来咬去）训练！训练！']
+};
+
+function personaName(){ return persona === 'shark' ? '澜澜' : '汐汐'; }
+
+function togglePersona(){
+  persona = persona === 'whale' ? 'shark' : 'whale';
+  try { localStorage.setItem('wm_persona', persona); } catch(e){}
+  $('#btn-persona').textContent = persona === 'whale' ? '🐳 汐汐' : '🦈 澜澜';
+  AV.mood = 'idle';
+  AV.anim = null;
+  const msg = persona === 'whale'
+    ? '（人格切换为鲸鱼娘·汐汐）呜噜噜～主人好呀！今天要聊天、打游戏还是看视频？'
+    : '（人格切换为鲨鱼娘·澜澜）哟！主人！本小姐澜澜前来报到！想打架……不是，想打游戏吗？';
+  bubble(msg, 5000);
+  if (IS_ELECTRON && window.whalemaid) window.whalemaid.overlaySpeak(personaName() + '来啦～');
+  if (settings.speak) speak(msg);
+}
+
+/* ---- 云端同步（需后台模式） ---- */
+async function syncFromCloud(){
+  if (!settings.backendUrl){ toast('主人～先在设置里填后端地址和同步口令哦'); return; }
+  try {
+    const headers = {};
+    if (settings.syncKey) headers['X-Sync-Key'] = settings.syncKey;
+    const res = await fetch(settings.backendUrl + '/api/state', { headers });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (Array.isArray(data.history)){
+      history = data.history;
+      $('#messages').innerHTML = '';
+      history.forEach(m => addMsg(m.role, m.content));
+    }
+    if (data.persona === 'whale' || data.persona === 'shark'){
+      persona = data.persona;
+      try { localStorage.setItem('wm_persona', persona); } catch(e){}
+      $('#btn-persona').textContent = persona === 'whale' ? '🐳 汐汐' : '🦈 澜澜';
+    }
+    toast('✅ 已从云端拉取（历史 ' + (history.length) + ' 条）');
+  } catch(e){ toast('拉取失败：' + e.message); }
+}
+
+async function syncToCloud(){
+  if (!settings.backendUrl){ toast('主人～先在设置里填后端地址和同步口令哦'); return; }
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (settings.syncKey) headers['X-Sync-Key'] = settings.syncKey;
+    const res = await fetch(settings.backendUrl + '/api/state', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        history: history.slice(-80),
+        persona,
+        settings: { model: settings.model, thinking: settings.thinking, effort: settings.effort, temp: settings.temp }
+      })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    toast('✅ 已同步到云端（' + history.slice(-80).length + ' 条）');
+  } catch(e){ toast('同步失败：' + e.message); }
+}
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function interact(zone){
+  const moodMap = { head:'happy', cheek:'blush', tail:'shy', giggle:'happy' };
+  const animMap = { head:'bounce', cheek:'mood', tail:'wiggle', giggle:'mood' };
+  AV.setMood(moodMap[zone]);
+  AV.setAnim(animMap[zone], 1.1);
+  const lines = persona === 'shark' ? CANNED_SHARK : CANNED;
+  const line = pick(lines[zone]);
+  bubble(line, 3600);
+  if (IS_ELECTRON && window.whalemaid) window.whalemaid.overlaySpeak(line);
+  setTimeout(()=>{ if (AV.mood===moodMap[zone]) AV.mood='idle'; }, 4200);
+}
+
+function canvasPos(ev, canvas){
+  const r = canvas.getBoundingClientRect();
+  const x = (ev.clientX - r.left) / r.width * 300;
+  const y = (ev.clientY - r.top) / r.height * 460;
+  return {x, y};
+}
+function hitZone(p){
+  if (Math.hypot(p.x-150,p.y-182) < 74) return 'head';
+  if (Math.hypot(p.x-110,p.y-204) < 28 || Math.hypot(p.x-190,p.y-204) < 28) return 'cheek';
+  if (p.y > 372) return 'tail';
+  return 'giggle';
+}
+
+function askWhaleSpeak(){
+  if (busy) return;
+  const prompt = '（主人戳了戳汐汐，想让汐汐主动说句话～）';
+  $('#chatinput').value = prompt;
+  sendUser(prompt);
+}
+/* ---- 语音合成 ---- */
+function speak(text){
+  if (!settings.speak) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.slice(0,300));
+    u.lang = 'zh-CN'; u.rate = 1.05; u.pitch = 1.35;
+    const zh = speechSynthesis.getVoices().find(v=>/zh/i.test(v.lang));
+    if (zh) u.voice = zh;
+    speechSynthesis.speak(u);
+  } catch(e){}
+}
+
+/* ---- 语音输入 ---- */
+let recognition = null;
+function setupVoice(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR){ $('#btn-voice').title = '此浏览器不支持语音输入'; return; }
+  recognition = new SR();
+  recognition.lang = 'zh-CN'; recognition.interimResults = false;
+  recognition.onresult = e => {
+    const t = e.results[0][0].transcript;
+    $('#chatinput').value = ($('#chatinput').value ? $('#chatinput').value + ' ' : '') + t;
+  };
+  recognition.onerror = () => toast('语音识别失败，换个安静点的环境试试～');
+  $('#btn-voice').addEventListener('click', () => {
+    if (busy) return;
+    try { recognition.start(); toast('🎤 在听呢，请说话…'); }
+    catch(e){ toast('麦克风不可用或正在识别中'); }
+  });
+}
+
+/* ---- 设置抽屉 ---- */
+function openDrawer(){ $('#drawer').classList.add('open'); fillDrawer(); }
+function fillDrawer(){
+  $('#set-key').value = settings.apiKey;
+  $('#set-model').value = settings.model;
+  $('#set-think').checked = settings.thinking;
+  $('#set-effort').value = settings.effort;
+  $('#set-temp').value = settings.temp;
+  $('#set-speak').checked = settings.speak;
+  $('#set-anim').checked = settings.anim;
+  $('#set-mem').checked = settings.memory;
+  $('#set-conn').value = settings.connMode;
+  $('#set-backend').value = settings.backendUrl;
+  $('#set-sync').value = settings.syncKey;
+}
+
+/* ---- 模式切换 ---- */
+function setMode(m){
+  curMode = m;
+  $$('.chattab').forEach(t => t.classList.toggle('on', t.dataset.mode === m));
+  $('#modeNow').textContent = m==='chat' ? '日常' : (m==='game' ? '陪玩' : '陪看');
+}
+
+/* ---- 陪玩游戏 ---- */
+function startGame(){
+  const name = $('#gameName').value.trim();
+  if (!name){ toast('告诉汐汐你在玩什么嘛～'); return; }
+  currentGame = name;
+  $('#gameresult').classList.add('show');
+  refreshGameState();
+  sendUser(`（开始陪玩）我们开始玩《${name}》啦，汐汐给我点开局鼓励吧！`);
+}
+function refreshGameState(){
+  $('#gameState').textContent = `正在陪主人玩《${currentGame||'?'}》 · 胜 ${gameWin} 负 ${gameLose}`;
+}
+function gameResult(win){
+  if (!currentGame){ toast('先告诉汐汐你在玩什么游戏哦'); return; }
+  if (win){ gameWin++; sendUser(`（赢了）刚打完《${currentGame}》赢啦！汐汐快跟我一起庆祝！`); }
+  else { gameLose++; sendUser(`（输了）刚打完《${currentGame}》输了…汐汐安慰安慰我，顺便分析下怎么赢回来`); }
+  refreshGameState();
+}
+
+/* ---- 陪看视频 ---- */
+function embedFrame(src){
+  const holder = $('#videoPlayer').parentNode;
+  const ifr = document.createElement('iframe');
+  ifr.src = src; ifr.style.cssText = 'width:100%;height:52vh;border:none;border-radius:12px';
+  $('#videoPlayer').style.display = 'none';
+  holder.appendChild(ifr);
+  holder._iframe = ifr;
+}
+function restoreVideo(){
+  const holder = $('#videoPlayer').parentNode;
+  if (holder._iframe){ holder._iframe.remove(); holder._iframe = null; }
+  $('#videoPlayer').style.display = '';
+}
+function loadVideo(url, name){
+  restoreVideo();
+  const v = $('#videoPlayer');
+  v.src = url; v.play().catch(()=>{});
+  toast('🎬 开始和汐汐一起看啦！记得给汐汐讲讲剧情哦');
+  setMode('watch');
+}
+function parseUrl(v){
+  if (/(bilibili|b23\.tv)/i.test(v)){
+    const bv = v.match(/BV[0-9A-Za-z]+/);
+    if (bv) return {embed: 'https://player.bilibili.com/player.html?bvid=' + bv[0]};
+    return null;
+  }
+  if (/(youtube|youtu\.be)/i.test(v)){
+    const id = v.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+    if (id) return {embed: 'https://www.youtube.com/embed/' + id[1]};
+    return null;
+  }
+  return {direct: v};
+}
+
+/* ---- 桌面悬浮窗 ---- */
+function openOverlay(){
+  if (!IS_ELECTRON){ toast('悬浮窗需要 Electron 桌面版哦～'); return; }
+  window.whalemaid.openOverlay();
+  toast('✨ 悬浮窗已开启！可拖到游戏画面旁，Ctrl+Shift+O 切换鼠标穿透');
+}
+/* ---- 初始化 ---- */
+function init(){
+  if (settings.memory){
+    try { const h = JSON.parse(localStorage.getItem('wm_history') || '[]'); history = Array.isArray(h) ? h : []; } catch(e){}
+  }
+  history.forEach(m => addMsg(m.role, m.content));
+  if (!history.length) addMsg('assistant', '呜噜噜～欢迎回来，主人！我是女仆鲸鱼娘汐汐🐳。想聊天、打游戏还是看视频，汐汐都陪你～');
+
+  $('#btn-send').addEventListener('click', () => sendUser());
+  $('#chatinput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendUser(); }
+  });
+  $('#btn-settings').addEventListener('click', openDrawer);
+  $('#btn-close-drawer').addEventListener('click', () => $('#drawer').classList.remove('open'));
+  $('#btn-save').addEventListener('click', () => { saveSettings(); $('#drawer').classList.remove('open'); toast('已保存～'); });
+  $('#btn-clear').addEventListener('click', () => { if (confirm('确定清空对话吗？')) clearChat(); });
+  $('#btn-mute').addEventListener('click', () => {
+    settings.speak = !settings.speak;
+    $('#btn-mute').textContent = settings.speak ? '🔊 语音' : '🔇 静音';
+  });
+  $('#btn-mute').textContent = settings.speak ? '🔊 语音' : '🔇 静音';
+
+  // 人格切换 + 云端同步
+  $('#btn-persona').textContent = persona === 'whale' ? '🐳 汐汐' : '🦈 澜澜';
+  $('#btn-persona').addEventListener('click', togglePersona);
+  $('#btn-sync-pull').addEventListener('click', syncFromCloud);
+  $('#btn-sync-push').addEventListener('click', syncToCloud);
+
+  // 模式
+  $$('.chattab').forEach(t => t.addEventListener('click', () => {
+    const m = t.dataset.mode;
+    if (m === 'game'){ setMode('game'); $('#gameModal').classList.add('open'); }
+    else if (m === 'watch'){ setMode('watch'); $('#videoModal').classList.add('open'); }
+    else setMode('chat');
+  }));
+  $('#btn-game').addEventListener('click', () => { setMode('game'); $('#gameModal').classList.add('open'); });
+  $('#btn-video').addEventListener('click', () => { setMode('watch'); $('#videoModal').classList.add('open'); });
+  $('#btn-close-game').addEventListener('click', () => $('#gameModal').classList.remove('open'));
+  $('#btn-close-video').addEventListener('click', () => { $('#videoModal').classList.remove('open'); restoreVideo(); });
+  $('#btn-game-start').addEventListener('click', startGame);
+  $('#btn-win').addEventListener('click', () => gameResult(true));
+  $('#btn-lose').addEventListener('click', () => gameResult(false));
+  $('#btn-change').addEventListener('click', () => { currentGame = null; $('#gameName').value=''; $('#gameresult').classList.remove('show'); refreshGameState(); toast('换什么游戏呀？告诉汐汐～'); });
+  $('#btn-game-overlay').addEventListener('click', openOverlay);
+
+  // 视频
+  $('#btn-load-local').addEventListener('click', () => $('#videoFile').click());
+  $('#videoFile').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    loadVideo(URL.createObjectURL(f), f.name);
+  });
+  $('#btn-load-url').addEventListener('click', () => {
+    const v = $('#videoUrl').value.trim();
+    if (!v) return;
+    const r = parseUrl(v);
+    if (!r){ toast('无法解析这个链接呢～'); return; }
+    if (r.embed){ restoreVideo(); embedFrame(r.embed); setMode('watch'); toast('🎬 已加载嵌入式播放器，一起看！'); }
+    else loadVideo(r.direct, v);
+  });
+
+  // 形象互动
+  $('#avatarCanvas').addEventListener('click', e => interact(hitZone(canvasPos(e, $('#avatarCanvas')))));
+  $$('.qbtn').forEach(b => b.addEventListener('click', () => {
+    const act = b.dataset.act;
+    if (act === 'ai') askWhaleSpeak(); else interact(act);
+  }));
+  $('#btn-overlay').addEventListener('click', openOverlay);
+
+  setupVoice();
+  if (speechSynthesis) speechSynthesis.getVoices();
+
+  setInterval(() => {
+    if (!busy && Math.random() < 0.55){
+      const lines = persona === 'shark' ? CANNED_SHARK : CANNED;
+      const l = pick(lines.idle);
+      bubble(l, 4200);
+      if (IS_ELECTRON && window.whalemaid) window.whalemaid.overlaySpeak(l);
+    }
+  }, 45000);
+
+  startAvatar();
+}
+
+/* ---- 悬浮窗独立页 ---- */
+if (IS_OVERLAY){
+  document.body.classList.add('overlay');
+  $('#overlayUI').style.display = 'flex';
+  $('#topbar').style.display = 'none';
+  $('#main').style.display = 'none';
+  const mini = $('#miniCanvas');
+  mini.addEventListener('mousedown', () => { if (window.whalemaid) window.whalemaid.dragStart(); });
+  window.addEventListener('mouseup', () => { if (window.whalemaid) window.whalemaid.dragEnd(); });
+  mini.addEventListener('click', e => interact(hitZone(canvasPos(e, mini))));
+  $('#o-close').addEventListener('click', () => window.whalemaid && window.whalemaid.closeOverlay());
+  if (window.whalemaid && window.whalemaid.onOverlaySpeak){
+    window.whalemaid.onOverlaySpeak(t => {
+      const b = $('#oBubble'); b.textContent = t; b.classList.add('show');
+      clearTimeout(window._obt); window._obt = setTimeout(() => b.classList.remove('show'), 6000);
+    });
+  }
+  window.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'O'){
+      if (window.whalemaid) window.whalemaid.toggleClickThrough();
+    }
+  });
+  startAvatar();
+} else {
+  document.addEventListener('DOMContentLoaded', init);
+}
+</script>
+
+
+
+
+
+
+
+
+</body>
+</html>
+

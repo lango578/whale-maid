@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 简化的鲸鱼娘头像：脸 + 刘海 + 发箍 + 鲸鱼尾巴 -->
+    <group>
+        <!-- 尾巴 -->
+        <path
+            android:fillColor="#2C7DA0"
+            android:pathData="M54,66 L42,78 C38,84 36,90 40,92 L54,86 L68,92 C72,90 70,84 66,78 Z" />
+        <!-- 脸 -->
+        <path
+            android:fillColor="#FFE9DE"
+            android:pathData="M54,34 a20,20 0 1,0 0,40 a20,20 0 1,0 0,-40 Z" />
+        <!-- 后发 -->
+        <path
+            android:fillColor="#1F6B94"
+            android:pathData="M54,26 C44,26 38,32 37,42 L37,64 C42,68 50,70 54,70 C58,70 66,68 71,64 L71,42 C70,32 64,26 54,26 Z" />
+        <!-- 刘海 -->
+        <path
+            android:fillColor="#113A5C"
+            android:pathData="M36,40 C38,32 46,26 54,26 C62,26 70,32 72,40 C66,36 60,36 54,36 C48,36 42,36 36,40 Z" />
+        <!-- 发箍 -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M36,40 C44,32 64,32 72,40 C64,38 44,38 36,40 Z" />
+        <!-- 蝴蝶结 -->
+        <path
+            android:fillColor="#2BB9C8"
+            android:pathData="M38,40 L33,35 L36,42 L33,47 L40,43 Z" />
+        <!-- 眼睛 -->
+        <path
+            android:fillColor="#16405F"
+            android:pathData="M46,52 a4,4 0 1,0 0.1,0 Z M62,52 a4,4 0 1,0 0.1,0 Z" />
+        <path
+            android:fillColor="#3EC6D6"
+            android:pathData="M46,52 a2.5,3 0 1,0 0.1,0 Z M62,52 a2.5,3 0 1,0 0.1,0 Z" />
+        <!-- 嘴 -->
+        <path
+            android:strokeColor="#B0526A"
+            android:strokeWidth="2"
+            android:fillColor="#00000000"
+            android:pathData="M50,62 Q54,66 58,62" />
+    </group>
+</vector>

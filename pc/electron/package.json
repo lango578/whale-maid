@@ -1,0 +1,35 @@
+{
+  "name": "whale-maid",
+  "productName": "鲸鱼娘·汐汐",
+  "version": "1.0.0",
+  "description": "DeepSeek 女仆鲸鱼娘「汐汐」桌面伴侣 —— 聊天/陪玩/陪看/桌面悬浮",
+  "main": "main.js",
+  "author": "whalemaid",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.whalemaid.app",
+    "productName": "鲸鱼娘汐汐",
+    "files": [
+      "main.js",
+      "preload.js",
+      "../whale-maid-pc.html"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "鲸鱼娘·汐汐"
+    }
+  }
+}

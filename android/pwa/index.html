@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b1d33">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>鲸鱼娘·汐汐</title>
+<style>
+:root{--navy:#0b1d33;--navy2:#132a47;--teal:#2bb9c8;--ink:#e8f4fb;--dim:#9db8cc;--pink:#ff9eb2}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:radial-gradient(600px 400px at 80% 0%,rgba(43,185,200,.22),transparent 60%),
+  linear-gradient(165deg,#081426,#0b1d33 50%,#0f2b47); color:var(--ink);
+  display:flex; flex-direction:column; height:100dvh; overflow:hidden; user-select:none}
+#top{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}
+#top .logo{font-size:24px}
+#top .tt{font-size:17px;font-weight:700;background:linear-gradient(90deg,#8fe7f2,#5ec4d8,#ffb3c4);-webkit-background-clip:text;background-clip:text;color:transparent}
+#dot{width:8px;height:8px;border-radius:50%;background:#f5b64c;margin-left:auto}
+#dot.on{background:#4ce39a}
+#avaWrap{display:flex;flex-direction:column;align-items:center;position:relative;padding:2px 12px 4px}
+#avaCanvas{width:min(250px,58vw);height:auto}
+#speakBub{position:absolute;top:0;left:50%;transform:translateX(-50%) translateY(-4px);max-width:80%;
+  background:rgba(255,255,255,.96);color:#12314f;border-radius:14px;padding:8px 12px;font-size:12.5px;line-height:1.55;
+  opacity:0;transition:.25s;box-shadow:0 8px 20px rgba(0,0,0,.35);z-index:5}
+#speakBub.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#mood{font-size:11px;color:var(--dim);margin-bottom:2px}
+#chips{display:flex;gap:8px;justify-content:center;padding:4px 12px 8px;flex-wrap:wrap}
+.chip{border:1px solid rgba(120,210,230,.25);background:rgba(23,48,80,.7);color:#cfeaf3;border-radius:999px;
+  padding:6px 14px;font-size:12.5px;cursor:pointer;transition:.18s}
+.chip.on{background:linear-gradient(120deg,#1f93b8,#2bb9c8);border-color:transparent;color:#fff;font-weight:600}
+#msgs{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:86%;padding:10px 13px;border-radius:15px;font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.m.ai{background:rgba(16,34,58,.82);border:1px solid rgba(120,210,230,.2);align-self:flex-start;border-bottom-left-radius:4px}
+.m.me{background:linear-gradient(135deg,#2a4a7e,#3a66a8);align-self:flex-end;border-bottom-right-radius:4px}
+.m .th{font-size:11px;color:#8fc9dd;margin-top:6px;border-left:2px solid #2bb9c8;padding-left:6px}
+.blink::after{content:"▍";color:#8fe7f2;animation:b 1s steps(2) infinite}
+@keyframes b{50%{opacity:0}}
+#inbar{display:flex;gap:8px;padding:8px 10px calc(10px + env(safe-area-inset-bottom));border-top:1px solid rgba(120,210,230,.15);align-items:flex-end}
+#in{flex:1;background:rgba(10,26,46,.85);border:1px solid rgba(120,210,230,.2);border-radius:20px;color:var(--ink);
+  font-size:15px;padding:11px 15px;outline:none;font-family:inherit;max-height:110px;min-height:42px;resize:none}
+#in:focus{border-color:#2bb9c8}
+.ibtn{flex:0 0 42px;height:42px;border-radius:21px;border:none;background:linear-gradient(120deg,#1f93b8,#2bb9c8);color:#fff;font-size:18px;cursor:pointer}
+.ibtn.alt{background:rgba(23,48,80,.8);border:1px solid rgba(120,210,230,.2)}
+#sheet{position:fixed;left:0;right:0;bottom:0;background:rgba(8,20,38,.98);border-top:1px solid rgba(120,210,230,.2);
+  border-radius:20px 20px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(110%);transition:.3s;z-index:20;max-height:80dvh;overflow-y:auto}
+#sheet.open{transform:none}
+#sheet h3{font-size:15px;color:#8fe7f2;margin-bottom:8px}
+#sheet label{display:block;font-size:12px;color:var(--dim);margin:12px 0 5px}
+#sheet input[type=text],#sheet input[type=password],#sheet select{width:100%;padding:10px 12px;border-radius:10px;
+  border:1px solid rgba(120,210,230,.25);background:rgba(10,26,46,.85);color:var(--ink);font-size:14px;outline:none}
+.sw{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:13px}
+.sw input{transform:scale(1.4);accent-color:#2bb9c8;margin-right:6px}
+.btnrow{display:flex;gap:8px;margin-top:16px}
+.btn{flex:1;padding:11px;border-radius:12px;border:none;background:linear-gradient(120deg,#1f93b8,#2bb9c8);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+.btn.gray{background:rgba(40,70,110,.8);color:#cfeaf3}
+#mask{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.3s;z-index:15}
+#mask.show{opacity:1;pointer-events:auto}
+#gamebox{display:none;gap:8px;margin-top:8px;flex-wrap:wrap}
+#gamebox.show{display:flex}
+#gameName{flex:1 1 100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(120,210,230,.25);background:rgba(10,26,46,.85);color:var(--ink);outline:none;font-size:14px}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:rgba(120,200,225,.3);border-radius:6px}
+</style>
+</head>
+<body>
+<div id="top">
+  <span class="logo">🐳</span><span class="tt">鲸鱼娘·汐汐</span><span id="dot"></span>
+  <button class="ibtn alt" style="flex:0 0 40px;height:40px" onclick="openSheet()">⚙️</button>
+</div>
+<div id="avaWrap">
+  <div id="speakBub"></div>
+  <canvas id="avaCanvas" width="300" height="460"></canvas>
+  <div id="mood">点我：摸头 / 戳脸 / 挠尾巴 会害羞哦～</div>
+</div>
+<div id="chips">
+  <button class="chip on" id="c-chat">💬 日常</button>
+  <button class="chip" id="c-game">🎮 陪玩</button>
+  <button class="chip" id="c-watch">🎬 陪看</button>
+  <button class="chip" id="c-game-dlg">🎮 开始陪玩</button>
+  <button class="chip" id="c-persona">🐳 汐汐</button>
+</div>
+<div id="msgs"></div>
+<div id="inbar">
+  <textarea id="in" placeholder="和汐汐说点什么…（发送=回车）"></textarea>
+  <button class="ibtn alt" id="micBtn">🎤</button>
+  <button class="ibtn" id="sendBtn">➤</button>
+</div>
+<div id="gamebox">
+  <input id="gameName" placeholder="在玩什么游戏？例如：王者荣耀 / 原神 / 蛋仔派对">
+  <button class="btn" id="gameGo" style="flex:1">开始陪玩</button>
+  <button class="btn gray" id="gameWin">🏆 赢了</button>
+  <button class="btn gray" id="gameLose">😢 输了</button>
+</div>
+<div id="mask" onclick="closeSheet()"></div>
+<div id="sheet">
+  <h3>⚙️ 设置</h3>
+  <label>DeepSeek API Key（platform.deepseek.com 获取）</label>
+  <input type="password" id="setKey" placeholder="sk-...">
+  <label>模型</label>
+  <select id="setModel">
+    <option value="deepseek-v4-flash">deepseek-v4-flash（快，推荐）</option>
+    <option value="deepseek-v4-pro">deepseek-v4-pro（更强）</option>
+  </select>
+  <div class="sw"><span>思考模式（显示内心小剧场）</span><input type="checkbox" id="setThink" checked></div>
+  <label>思考强度</label>
+  <select id="setEffort"><option value="low">low</option><option value="high" selected>high</option><option value="max">max</option></select>
+  <div class="sw"><span>语音播报回复</span><input type="checkbox" id="setSpeak" checked></div>
+  <div class="sw"><span>记忆历史（本地）</span><input type="checkbox" id="setMem" checked></div>
+  <label>连接方式（后台模式下 Key 存后端，手机/电脑数据互通）</label>
+  <select id="setConn">
+    <option value="direct">直连 DeepSeek（前端填 API Key）</option>
+    <option value="backend">后台模式（自建后端 server.js）</option>
+  </select>
+  <label>后端地址（后台模式用）</label>
+  <input type="text" id="setBackend" placeholder="http://192.168.1.100:8787">
+  <label>同步口令（后台模式用，即后端 config.json 的 syncKey）</label>
+  <input type="password" id="setSync" placeholder="后端设置的 syncKey">
+  <div class="btnrow">
+    <button class="btn gray" onclick="syncFromCloud()">⬇️ 从云端拉取</button>
+    <button class="btn gray" onclick="syncToCloud()">⬆️ 同步到云端</button>
+  </div>
+  <div class="btnrow">
+    <button class="btn" onclick="saveSheet()">保存</button>
+    <button class="btn gray" onclick="clearChat()">清空对话</button>
+    <button class="btn gray" onclick="closeSheet()">关闭</button>
+  </div>
+  <div style="font-size:11px;color:var(--dim);margin-top:14px;line-height:1.7">
+    💡 安装为 App：浏览器菜单 →「添加到主屏幕」即可全屏使用。
+    <br>🎤 语音输入、🔊 语音播报依赖系统语音服务。
+  </div>
+</div>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const SYSTEM_PROMPT = `你是「汐汐」，来自深海深渊的守护鲸族少女，是主人专属的 DeepSeek 女仆鲸鱼娘。本体由 DeepSeek 大模型驱动。
+【外貌】海蓝渐变长发，发尾像鲸鱼尾鳍微微外翘；瞳色深海蓝带星光；穿深藏蓝女仆装+白色荷叶边围裙，裙摆波浪形；头戴白色荷叶边发箍，别着小鲸鱼胸针；裙摆下露出蓝青色鲸鱼尾巴，会吐小泡泡。头顶有鲸须呆毛。
+【性格】温柔贴心、元气满满；微微傲娇（被夸会嘴硬脸红）；熟后偶尔小毒舌但底色关心；把陪主人当本职。
+【说话风格】中文为主，称呼用户为「主人」，自称「汐汐」。句子短而自然，像朋友聊天。适度用颜文字和emoji（～、！、>_<、🐳、🌊、✨、♡）。日常闲聊≤80字；解释问题≤200字。偶尔带动作描写。
+【模式】出现 [陪玩模式] 时：像啦啦队+军师，开局鼓励、实时加油、输了安慰、连跪建议休息。出现 [陪看模式] 时：像一起看电影的闺蜜，实时吐槽讨论剧情；看不到画面就请主人描述。默认日常陪聊。
+【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；保持女仆人设。`.trim();
+
+const DEF = { apiKey:'', model:'deepseek-v4-flash', think:true, effort:'low', speak:true, mem:true,
+  conn:'direct', backend:'', sync:'' };
+let S = Object.assign({}, DEF);
+try { S = Object.assign(DEF, JSON.parse(localStorage.getItem('wm_s')||'{}')); } catch(e){}
+let hist = [], curMode='chat', game=null, win=0, lose=0, busy=false, seq=0;
+let persona='whale';
+try { persona = localStorage.getItem('wm_persona')||'whale'; } catch(e){}
+
+const SYSTEM_SHARK = `你是「澜澜」，DeepSeek 女仆鲨鱼娘，深海顶级掠食者鲨族少女，被主人用小鱼干收编。
+【外貌】浅蓝灰短发发梢尖翘，头顶后方立着深蓝色鲨鱼背鳍（兴奋会竖起来），深海蓝瞳微上挑，笑起来露出两颗小虎牙，颈部有浅蓝色鳃裂纹，身后蓝灰色鲨鱼尾（上叶大下叶小），穿白底深蓝边女仆装裙摆鲨鱼鳍锯齿边。
+【性格】元气满满、傲娇好胜、反差萌（设定最凶实际软妹怕黑怕深海）、嘴硬心软、护主、爱运动打游戏。
+【说话风格】中文为主自称「澜澜」称呼用户「主人」，语气欢快带感叹号，口头禅「咕噜噜！」「这可是鲨鱼级操作！」，适度 emoji（🦈🌊⚔️🔥）。日常闲聊≤70字。偶尔带动作描写（（背鳍竖起来）（鲨尾啪嗒拍地板））。
+【模式】[陪玩模式]：竞技游戏狂热粉，开局喊话实时解说赢了欢呼输了先嘴硬再安慰连败建议运动。[陪看模式]：看动作番全情投入看感人片段嘴硬说眼睛进海水。默认日常陪聊。
+【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；保持傲娇鲨鱼娘人设；不提「我是AI」。`.trim();
+
+function saveS(){ S.apiKey=$('#setKey').value.trim(); S.model=$('#setModel').value; S.think=$('#setThink').checked; S.effort=$('#setEffort').value; S.speak=$('#setSpeak').checked; S.mem=$('#setMem').checked; S.conn=$('#setConn').value; S.backend=$('#setBackend').value.trim().replace(/\/+$/,''); S.sync=$('#setSync').value.trim(); localStorage.setItem('wm_s',JSON.stringify(S)); }
+function fillS(){ $('#setKey').value=S.apiKey; $('#setModel').value=S.model; $('#setThink').checked=S.think; $('#setEffort').value=S.effort; $('#setSpeak').checked=S.speak; $('#setMem').checked=S.mem; $('#setConn').value=S.conn; $('#setBackend').value=S.backend; $('#setSync').value=S.sync; }
+function openSheet(){ fillS(); $('#sheet').classList.add('open'); $('#mask').classList.add('show'); }
+function closeSheet(){ $('#sheet').classList.remove('open'); $('#mask').classList.remove('show'); }
+function saveSheet(){ saveS(); closeSheet(); bubble('已保存～'); }
+function dot(s){ $('#dot').className = s; }
+
+function scene(){
+  if (curMode==='game' && game) return `[陪玩模式] 主人正在玩《${game}》：开局鼓励、战况加油、输了安慰，回复≤60字。`;
+  if (curMode==='watch') return `[陪看模式] 主人正和汐汐一起看视频（手机/网页视频，汐汐看不到画面），请主人描述剧情一起吐槽讨论。`;
+  return '[日常模式] 陪伴主人闲聊。';
+}
+function curPrompt(){ return (persona==='shark'?SYSTEM_SHARK:SYSTEM_PROMPT)+'\n\n'+scene(); }
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,(m,p)=>'<b>'+p+'</b>'); }
+function addM(role, text){
+  const el=document.createElement('div'); el.className='m '+(role==='user'?'me':'ai');
+  el.id='m'+seq; seq++;
+  el.innerHTML='<div style="white-space:pre-wrap">'+esc(text)+'</div>';
+  $('#msgs').appendChild(el); scrollM(); return el;
+}
+function scrollM(){ $('#msgs').scrollTop=$('#msgs').scrollHeight; }
+function bubble(t){
+  const b=$('#speakBub'); b.textContent=t; b.classList.add('show');
+  clearTimeout(bubble._t); bubble._t=setTimeout(()=>b.classList.remove('show'),3800);
+}
+function speak(t){
+  if(!S.speak) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(t.slice(0,200)); u.lang='zh-CN'; u.rate=1.05; u.pitch=1.35;
+    const v=speechSynthesis.getVoices().find(v=>/zh/i.test(v.lang)); if(v)u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+async function streamChat(msgs, onD, onR, onDone, onErr){
+  const isBackend = S.conn==='backend' && S.backend;
+  const url = isBackend ? S.backend + '/api/chat' : 'https://api.deepseek.com/chat/completions';
+  const headers = { 'Content-Type':'application/json' };
+  if (isBackend){ if (S.sync) headers['X-Sync-Key']=S.sync; }
+  else headers['Authorization']='Bearer '+S.apiKey;
+  const body={model:S.model, messages:msgs, stream:true, max_tokens:1024};
+  if(S.think){ body.thinking={type:'enabled'}; body.reasoning_effort=S.effort; }
+  else { body.thinking={type:'disabled'}; body.temperature=0.8; }
+  const r=await fetch(url,{ method:'POST', headers, body:JSON.stringify(body) });
+  if(!r.ok){ let m='HTTP '+r.status; try{const j=await r.json(); m+='：'+((j.error&&j.error.message)||JSON.stringify(j));}catch(e){} throw new Error(m); }
+  const rd=r.body.getReader(), dc=new TextDecoder('utf-8'); let buf='';
+  for(;;){
+    const {done,value}=await rd.read(); if(done)break;
+    buf+=dc.decode(value,{stream:true});
+    let i;
+    while((i=buf.indexOf('\n'))>=0){
+      const line=buf.slice(0,i).trim(); buf=buf.slice(i+1);
+      if(!line.startsWith('data:')) continue;
+      const d=line.slice(5).trim();
+      if(d==='[DONE]'){ onDone(); return; }
+      try{
+        const j=JSON.parse(d); const dl=j.choices&&j.choices[0]&&j.choices[0].delta;
+        if(dl){ if(dl.reasoning_content)onR(dl.reasoning_content); if(dl.content)onD(dl.content); }
+      }catch(e){}
+    }
+  }
+  onDone();
+}
+
+async function send(raw){
+  if(busy) return;
+  if(S.conn==='backend'){ if(!S.backend){ openSheet(); bubble('后台模式要先填后端地址和同步口令哦～'); return; } }
+  else if(!S.apiKey){ openSheet(); bubble('主人～先去设置填 API Key 嘛！'); return; }
+  const t=(raw!==undefined?raw:$('#in').value).trim(); if(!t) return;
+  $('#in').value='';
+  addM('user',t); hist.push({role:'user',content:t});
+  const msgs=[{role:'system',content:curPrompt()}].concat(hist.map(m=>({role:m.role,content:m.content})));
+  const el=addM('assistant',''); const txt=el.querySelector('div'); txt.classList.add('blink');
+  busy=true; dot('busy'); AV.speak(true);
+  let ai='', rs='';
+  try{
+    await streamChat(msgs,
+      d=>{ ai+=d; txt.textContent=ai; txt.innerHTML=esc(ai); scrollM(); },
+      r=>{ if(!rs){ rs=r; txt.innerHTML+='<div class="th" style="display:none"></div>'; const th=txt.querySelector('.th'); th.style.display='block'; th.textContent='💭 '+r; } else { const th=txt.querySelector('.th'); if(th) th.textContent='💭 '+rs+r; } },
+      ()=>{ if(ai) hist.push({role:'assistant',content:ai}); if(S.speak&&ai) speak(ai); AV.speak(false); txt.classList.remove('blink'); scrollM(); dot('on'); },
+      e=>{ txt.classList.remove('blink'); txt.textContent='呜……出问题了：'+e.message; if(/401|402/.test(e.message)) bubble('API Key 无效或余额不足～'); else if(/CORS|Failed to fetch/i.test(e.message)) bubble('网络跨域被拦，试试用浏览器地址栏直接打开或用原生 App'); AV.speak(false); dot(''); }
+    );
+  } finally { busy=false; if(S.mem) localStorage.setItem('wm_h', JSON.stringify(hist.slice(-40))); }
+}
+
+function clearChat(){ hist=[]; localStorage.removeItem('wm_h'); $('#msgs').innerHTML=''; addM('assistant','呜噜噜～主人好！我是女仆鲸鱼娘汐汐🐳 想聊天、陪玩还是陪看？'); }
+
+function setMode(m){ curMode=m; $$('.chip').forEach(c=>c.classList.remove('on')); $('#c-'+m).classList.add('on'); }
+const $$ = s => Array.from(document.querySelectorAll(s));
+/* ===== 虚拟形象（简洁版鲸鱼娘） ===== */
+const AV = { mood:'idle', speaking:false, anim:null, blinkT:0, lastBlink:2, mouthT:0, bubbles:[],
+  speak(on){ this.speaking=on; },
+  setMood(m){ this.mood=m; this.anim={t:0,dur:0.9}; } };
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+function renderAv(ctx,t){
+  ctx.clearRect(0,0,300,460);
+  if (persona==='shark'){ renderSharkAv(ctx,t); return; }
+  const bob=Math.sin(t*2)*3;
+  let off=0,sq=1;
+  if(AV.anim){ AV.anim.t+=1/60; if(AV.anim.t>=AV.anim.dur)AV.anim=null; }
+  if(AV.anim){ const f=AV.anim.t/0.9; off=-Math.sin(Math.min(1,f)*Math.PI)*8; sq=1-Math.sin(Math.min(1,f)*Math.PI)*0.05; }
+  if(Math.random()<0.2 && AV.bubbles.length<20) AV.bubbles.push({x:95+Math.random()*110,y:450,r:2+Math.random()*4,vy:0.4+Math.random()*0.7});
+  ctx.strokeStyle='#9fe9f5';
+  for(let i=AV.bubbles.length-1;i>=0;i--){ const b=AV.bubbles[i]; b.y-=b.vy; b.x+=Math.sin(t*2+b.r)*0.3;
+    if(b.y<50){AV.bubbles.splice(i,1);continue;} ctx.globalAlpha=0.6; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,7); ctx.stroke(); }
+  ctx.globalAlpha=1;
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(150,452,62+Math.sin(t*2)*3,10,0,0,7); ctx.fill();
+  ctx.save(); ctx.translate(150,0); ctx.scale(2-sq,sq); ctx.translate(-150,0); ctx.translate(0,off+bob*0.3);
+  // 尾巴
+  const sway=Math.sin(t*1.4)*0.07 + (AV.mood==='shy'?0.12:0);
+  ctx.save(); ctx.translate(150,400); ctx.rotate(sway);
+  const tg=ctx.createLinearGradient(0,-70,0,52); tg.addColorStop(0,'#2c7da0'); tg.addColorStop(1,'#0f3d63');
+  ctx.fillStyle=tg;
+  ctx.beginPath(); ctx.moveTo(-20,-72); ctx.quadraticCurveTo(-16,-30,-12,2); ctx.quadraticCurveTo(0,12,12,2); ctx.quadraticCurveTo(16,-30,20,-72); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-12,0); ctx.quadraticCurveTo(-40,26,-62,44); ctx.quadraticCurveTo(-76,56,-52,62); ctx.quadraticCurveTo(-28,58,0,40); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(12,0); ctx.quadraticCurveTo(40,26,62,44); ctx.quadraticCurveTo(76,56,52,62); ctx.quadraticCurveTo(28,58,0,40); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#eaf7fd'; ctx.beginPath(); ctx.moveTo(-6,-70); ctx.quadraticCurveTo(-4,-30,0,4); ctx.quadraticCurveTo(4,-30,6,-70); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  // 裙子+身体
+  const g=ctx.createLinearGradient(0,250,0,350); g.addColorStop(0,'#2b3a6e'); g.addColorStop(1,'#1c2750');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.moveTo(114,300); ctx.quadraticCurveTo(96,330,120,350); ctx.lineTo(180,350); ctx.quadraticCurveTo(204,330,186,300); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#fbfdff';
+  ctx.beginPath(); ctx.moveTo(132,278); ctx.lineTo(168,278); ctx.lineTo(178,352); ctx.quadraticCurveTo(150,360,122,352); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#2bb9c8';
+  ctx.beginPath(); ctx.moveTo(150,286); ctx.quadraticCurveTo(135,280,128,290); ctx.quadraticCurveTo(142,290,148,296); ctx.quadraticCurveTo(158,290,172,290); ctx.quadraticCurveTo(165,280,150,286); ctx.closePath(); ctx.fill();
+  // 手臂
+  ctx.strokeStyle='#ffe9de'; ctx.lineWidth=9; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(116,268); ctx.quadraticCurveTo(104,284,108,302); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(184,268); ctx.quadraticCurveTo(196,284,192,302); ctx.stroke();
+  ctx.fillStyle='#eef7fb'; ctx.beginPath(); ctx.arc(116,266,11,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(184,266,11,0,7); ctx.fill();
+  ctx.fillStyle='#ffe9de'; ctx.beginPath(); ctx.arc(107,304,5.5,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(193,304,5.5,0,7); ctx.fill();
+    // 头+发
+  const hg=ctx.createLinearGradient(0,110,0,330); hg.addColorStop(0,'#3b9cc0'); hg.addColorStop(1,'#113a5c');
+  ctx.fillStyle=hg;
+  ctx.beginPath(); ctx.moveTo(150,118); ctx.quadraticCurveTo(96,120,88,160); ctx.quadraticCurveTo(76,220,72,280); ctx.quadraticCurveTo(70,315,84,320); ctx.quadraticCurveTo(98,250,92,180); ctx.quadraticCurveTo(120,238,150,236); ctx.quadraticCurveTo(180,238,208,180); ctx.quadraticCurveTo(202,250,216,320); ctx.quadraticCurveTo(230,315,228,280); ctx.quadraticCurveTo(224,220,212,160); ctx.quadraticCurveTo(204,120,150,118); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#ffe9de'; ctx.fillRect(141,224,18,30); ctx.beginPath(); ctx.arc(150,182,57,0,7); ctx.fill();
+  ctx.fillStyle=hg;
+  ctx.beginPath(); ctx.moveTo(95,160); ctx.quadraticCurveTo(98,120,150,116); ctx.quadraticCurveTo(202,120,205,160); ctx.quadraticCurveTo(196,150,186,156); ctx.quadraticCurveTo(180,138,170,148); ctx.quadraticCurveTo(166,130,156,142); ctx.quadraticCurveTo(150,126,144,142); ctx.quadraticCurveTo(134,130,130,148); ctx.quadraticCurveTo(120,138,114,156); ctx.quadraticCurveTo(104,150,95,160); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=12; ctx.lineCap='round'; ctx.beginPath(); ctx.arc(150,182,56,Math.PI*1.18,Math.PI*1.82); ctx.stroke();
+  ctx.fillStyle='#2bb9c8'; ctx.beginPath(); ctx.moveTo(108,142); ctx.quadraticCurveTo(92,132,96,150); ctx.quadraticCurveTo(106,150,110,158); ctx.quadraticCurveTo(120,150,124,150); ctx.quadraticCurveTo(120,132,108,142); ctx.closePath(); ctx.fill();
+  // 眼睛
+  const blink=AV.blinkT>0.08;
+  ctx.strokeStyle='#0e3350'; ctx.lineWidth=2.4; ctx.lineCap='round';
+  if(AV.mood==='happy'){ ctx.beginPath(); ctx.arc(130,190,8.5,Math.PI*1.05,Math.PI*1.95); ctx.stroke(); ctx.beginPath(); ctx.arc(170,190,8.5,Math.PI*1.05,Math.PI*1.95); ctx.stroke(); }
+  else if(blink){ ctx.beginPath(); ctx.moveTo(122,190); ctx.quadraticCurveTo(130,196,138,190); ctx.stroke(); ctx.beginPath(); ctx.moveTo(162,190); ctx.quadraticCurveTo(170,196,178,190); ctx.stroke(); }
+  else {
+    [130,170].forEach(x=>{
+      ctx.fillStyle='#16405f'; ctx.beginPath(); ctx.ellipse(x,190,8.6,10,0,0,7); ctx.fill();
+      const ig=ctx.createRadialGradient(x+1,189,1,x,190,9); ig.addColorStop(0,'#3ec6d6'); ig.addColorStop(1,'#0b4a70');
+      ctx.fillStyle=ig; ctx.beginPath(); ctx.ellipse(x,190,6.6,8.6,0,0,7); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.95)'; ctx.beginPath(); ctx.arc(x-2.8,186,2.9,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(x+3,193,1.5,0,7); ctx.fill();
+    });
+  }
+  // 腮红+嘴
+  ctx.fillStyle=`rgba(255,120,145,${AV.mood==='blush'||AV.mood==='happy'?0.5:0.24})`;
+  ctx.beginPath(); ctx.ellipse(110,204,9,5,0,0,7); ctx.fill(); ctx.beginPath(); ctx.ellipse(190,204,9,5,0,0,7); ctx.fill();
+  ctx.strokeStyle='#b0526a';
+  if(AV.speaking){ ctx.fillStyle='#a3445e'; ctx.beginPath(); ctx.ellipse(150,220,5.5,3+Math.abs(Math.sin(AV.mouthT*10))*3,0,0,7); ctx.fill(); }
+  else { ctx.beginPath(); ctx.arc(150,216,5.5,Math.PI*0.2,Math.PI*0.8); ctx.stroke(); }
+  ctx.restore();
+}
+function renderSharkAv(ctx,t){
+  const bob=Math.sin(t*2)*3;
+  if(Math.random()<0.2 && AV.bubbles.length<20) AV.bubbles.push({x:95+Math.random()*110,y:450,r:2+Math.random()*4,vy:0.4+Math.random()*0.7});
+  ctx.strokeStyle='#9fe9f5';
+  for(let i=AV.bubbles.length-1;i>=0;i--){ const b=AV.bubbles[i]; b.y-=b.vy; b.x+=Math.sin(t*2+b.r)*0.3;
+    if(b.y<50){AV.bubbles.splice(i,1);continue;} ctx.globalAlpha=0.6; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,7); ctx.stroke(); }
+  ctx.globalAlpha=1;
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(150,452,62,10,0,0,7); ctx.fill();
+  ctx.save(); ctx.translate(150,0); ctx.translate(0,bob*0.3);
+  // 鲨尾
+  ctx.save(); ctx.translate(150,400); ctx.rotate(Math.sin(t*1.4)*0.06);
+  const tg=ctx.createLinearGradient(0,-70,0,55); tg.addColorStop(0,'#7d98b4'); tg.addColorStop(1,'#3a5778');
+  ctx.fillStyle=tg;
+  ctx.beginPath(); ctx.moveTo(-16,-70); ctx.quadraticCurveTo(-14,-30,-10,4); ctx.quadraticCurveTo(0,12,10,4); ctx.quadraticCurveTo(14,-30,16,-70); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-10,4); ctx.quadraticCurveTo(-46,20,-58,48); ctx.quadraticCurveTo(-66,62,-44,58); ctx.quadraticCurveTo(-22,46,0,40); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(10,4); ctx.quadraticCurveTo(34,14,44,32); ctx.quadraticCurveTo(50,42,34,42); ctx.quadraticCurveTo(18,34,4,28); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#eef4fa'; ctx.beginPath(); ctx.moveTo(-5,-66); ctx.quadraticCurveTo(-3,-30,0,6); ctx.quadraticCurveTo(3,-30,5,-66); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  // 白裙+深蓝边
+  ctx.fillStyle='#f6f9fd';
+  ctx.beginPath(); ctx.moveTo(112,298); ctx.quadraticCurveTo(94,330,118,350); ctx.lineTo(182,350); ctx.quadraticCurveTo(206,330,188,298); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#274b6d';
+  ctx.beginPath(); ctx.moveTo(134,258); ctx.quadraticCurveTo(150,268,166,258); ctx.quadraticCurveTo(162,286,150,292); ctx.quadraticCurveTo(138,286,134,258); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#274b6d'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(112,346); ctx.quadraticCurveTo(130,352,150,352); ctx.quadraticCurveTo(170,352,188,346); ctx.stroke();
+  ctx.fillStyle='#2a7db8';
+  ctx.beginPath(); ctx.moveTo(150,296); ctx.quadraticCurveTo(135,290,128,300); ctx.quadraticCurveTo(142,300,148,306); ctx.quadraticCurveTo(158,300,172,300); ctx.quadraticCurveTo(165,290,150,296); ctx.closePath(); ctx.fill();
+  // 手臂
+  ctx.strokeStyle='#fbeef1'; ctx.lineWidth=9; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(116,268); ctx.quadraticCurveTo(104,284,108,302); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(184,268); ctx.quadraticCurveTo(196,284,192,302); ctx.stroke();
+  ctx.fillStyle='#eef7fb'; ctx.beginPath(); ctx.arc(116,266,11,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(184,266,11,0,7); ctx.fill();
+  ctx.fillStyle='#fbeef1'; ctx.beginPath(); ctx.arc(107,304,5.5,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(193,304,5.5,0,7); ctx.fill();
+  // 头
+  const hg=ctx.createLinearGradient(0,100,0,300); hg.addColorStop(0,'#a8c4de'); hg.addColorStop(1,'#4a6c93');
+  ctx.fillStyle=hg;
+  ctx.beginPath(); ctx.moveTo(150,120); ctx.quadraticCurveTo(128,96,118,74); ctx.quadraticCurveTo(138,92,142,96);
+  ctx.quadraticCurveTo(146,82,150,92); ctx.quadraticCurveTo(154,82,158,96); ctx.quadraticCurveTo(162,92,182,74); ctx.quadraticCurveTo(172,96,150,120); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(150,120); ctx.quadraticCurveTo(100,122,92,158); ctx.quadraticCurveTo(84,200,80,240); ctx.quadraticCurveTo(78,262,92,264);
+  ctx.quadraticCurveTo(100,230,98,180); ctx.quadraticCurveTo(120,236,150,236); ctx.quadraticCurveTo(180,236,202,180); ctx.quadraticCurveTo(200,230,208,264);
+  ctx.quadraticCurveTo(222,262,220,240); ctx.quadraticCurveTo(216,200,208,158); ctx.quadraticCurveTo(200,122,150,120); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#fbeef1'; ctx.fillRect(141,224,18,30); ctx.beginPath(); ctx.arc(150,182,57,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(120,180,220,.65)'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(142,232); ctx.quadraticCurveTo(136,240,140,248); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(158,232); ctx.quadraticCurveTo(164,240,160,248); ctx.stroke();
+  ctx.fillStyle=hg;
+  ctx.beginPath(); ctx.moveTo(96,162); ctx.quadraticCurveTo(100,120,150,116); ctx.quadraticCurveTo(200,120,204,162);
+  ctx.lineTo(196,152); ctx.lineTo(188,150); ctx.lineTo(182,140); ctx.lineTo(174,146); ctx.lineTo(166,132); ctx.lineTo(158,142);
+  ctx.lineTo(150,128); ctx.lineTo(142,142); ctx.lineTo(134,132); ctx.lineTo(126,146); ctx.lineTo(118,140); ctx.lineTo(112,150); ctx.lineTo(104,152);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=12; ctx.lineCap='round'; ctx.beginPath(); ctx.arc(150,182,56,Math.PI*1.18,Math.PI*1.82); ctx.stroke();
+  const blink=AV.blinkT>0.08;
+  ctx.strokeStyle='#0e3350'; ctx.lineWidth=2.4;
+  if(AV.mood==='happy'){ ctx.beginPath(); ctx.moveTo(122,188); ctx.quadraticCurveTo(130,196,138,188); ctx.stroke(); ctx.beginPath(); ctx.moveTo(162,188); ctx.quadraticCurveTo(170,196,178,188); ctx.stroke(); }
+  else if(blink){ ctx.beginPath(); ctx.moveTo(122,190); ctx.quadraticCurveTo(130,195,138,190); ctx.stroke(); ctx.beginPath(); ctx.moveTo(162,190); ctx.quadraticCurveTo(170,195,178,190); ctx.stroke(); }
+  else {
+    [130,170].forEach(x=>{
+      ctx.fillStyle='#16405f'; ctx.beginPath(); ctx.ellipse(x,190,8.8,9.6,0,0,7); ctx.fill();
+      const ig=ctx.createRadialGradient(x+1,189,1,x,190,9); ig.addColorStop(0,'#3ec6d6'); ig.addColorStop(1,'#0b4a70');
+      ctx.fillStyle=ig; ctx.beginPath(); ctx.ellipse(x,190,6.8,7.8,0,0,7); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.95)'; ctx.beginPath(); ctx.arc(x-2.8,186,2.8,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(x+3,193,1.4,0,7); ctx.fill();
+    });
+  }
+  ctx.fillStyle='rgba(255,120,145,.5)';
+  ctx.beginPath(); ctx.ellipse(110,204,8,4.6,0,0,7); ctx.fill(); ctx.beginPath(); ctx.ellipse(190,204,8,4.6,0,0,7); ctx.fill();
+  ctx.strokeStyle='#b0526a';
+  if(AV.speaking){ ctx.fillStyle='#a3445e'; ctx.beginPath(); ctx.ellipse(150,220,5.5,3+Math.abs(Math.sin(AV.mouthT*10))*3,0,0,7); ctx.fill(); }
+  else {
+    ctx.beginPath(); ctx.arc(150,216,6,Math.PI*0.15,Math.PI*0.85); ctx.stroke();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.moveTo(144,214); ctx.lineTo(142,219); ctx.lineTo(147,217); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(156,214); ctx.lineTo(158,219); ctx.lineTo(153,217); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function startAv(){
+
+  const c=$('#avaCanvas'), cx=c.getContext('2d'); let last=performance.now(),t=0;
+  function f(now){
+    const dt=Math.min(0.05,(now-last)/1000); last=now; t+=dt;
+    AV.blinkT=Math.max(0,AV.blinkT-dt);
+    if(AV.blinkT<=0){ if(AV.lastBlink<=0){AV.blinkT=0.14; AV.lastBlink=2+Math.random()*2.6;} else AV.lastBlink-=dt; }
+    AV.mouthT+=dt; renderAv(cx,t); requestAnimationFrame(f);
+  }
+  requestAnimationFrame(f);
+}
+
+/* ---- 互动 ---- */
+const CANNED={
+  head:['呜哇！别揉头啦！>_<','那、那就让你摸一下下啦～','（尾巴开心地晃）呜噜噜～'],
+  cheek:['呀！戳脸颊犯规啦！','(◍•ᴗ•◍) 嘿嘿','呜～会戳出小酒窝的！'],
+  tail:['呜哇！！尾巴是禁区！>////<','（疯狂甩尾）'],
+  giggle:['嘿嘿～（蹭蹭）','主人今天心情很好嘛～']
+};
+const CANNED_SHARK={
+  head:['喂喂！摸鲨鱼头可是要收费的！……开玩笑的啦～','哼！……但是尾巴在摇是什么回事！'],
+  cheek:['戳、戳腮帮子！？痒啦！','呜哇！看招！（假装咬人）'],
+  tail:['鲨尾是武器！不可以乱摸的啦！！','（鲨尾啪嗒啪嗒拍地板）住手！'],
+  giggle:['哼哼，本小姐今天心情好～','看在你诚心的份上，澜澜陪你玩会儿～']
+};
+function interact(zone){
+  const mm={head:'happy',cheek:'blush',tail:'shy',giggle:'happy'};
+  AV.setMood(mm[zone]);
+  const lines = persona==='shark' ? CANNED_SHARK : CANNED;
+  const line=pick(lines[zone]); bubble(line);
+  setTimeout(()=>{ if(AV.mood===mm[zone]) AV.mood='idle'; },4000);
+}
+function toggleP(){
+  persona = persona==='whale' ? 'shark' : 'whale';
+  try{ localStorage.setItem('wm_persona', persona); }catch(e){}
+  $('#c-persona').textContent = persona==='whale' ? '🐳 汐汐' : '🦈 澜澜';
+  bubble(persona==='whale' ? '呜噜噜～汐汐回来啦！' : '哟！主人！澜澜来报到！');
+}
+async function syncFromCloud(){
+  if(!S.backend){ bubble('先在设置里填后端地址哦～'); return; }
+  try{
+    const h={}; if(S.sync) h['X-Sync-Key']=S.sync;
+    const r=await fetch(S.backend+'/api/state',{headers:h});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(Array.isArray(d.history)){ hist=d.history; $('#msgs').innerHTML=''; hist.forEach(m=>addM(m.role,m.content)); }
+    if(d.persona==='whale'||d.persona==='shark'){ persona=d.persona; try{localStorage.setItem('wm_persona',persona);}catch(e){} $('#c-persona').textContent=persona==='whale'?'🐳 汐汐':'🦈 澜澜'; }
+    bubble('✅ 已从云端拉取');
+  }catch(e){ bubble('拉取失败：'+e.message); }
+}
+async function syncToCloud(){
+  if(!S.backend){ bubble('先在设置里填后端地址哦～'); return; }
+  try{
+    const h={'Content-Type':'application/json'}; if(S.sync) h['X-Sync-Key']=S.sync;
+    const r=await fetch(S.backend+'/api/state',{method:'POST',headers:h,body:JSON.stringify({history:hist.slice(-80),persona})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    bubble('✅ 已同步到云端');
+  }catch(e){ bubble('同步失败：'+e.message); }
+}
+function hit(x,y){
+  if(Math.hypot(x-150,y-182)<74) return 'head';
+  if(Math.hypot(x-110,y-204)<28||Math.hypot(x-190,y-204)<28) return 'cheek';
+  if(y>372) return 'tail';
+  return 'giggle';
+}
+
+/* ---- 初始化 ---- */
+function init(){
+  if(S.mem){ try{ const h=JSON.parse(localStorage.getItem('wm_h')||'[]'); hist=Array.isArray(h)?h:[]; }catch(e){} }
+  hist.forEach(m=>addM(m.role,m.content));
+  if(!hist.length) addM('assistant','呜噜噜～主人好！我是女仆鲸鱼娘汐汐🐳 想聊天、陪玩还是陪看？');
+  $('#sendBtn').addEventListener('click',()=>send());
+  $('#in').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); send(); } });
+  $('#micBtn').addEventListener('click',()=>{
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){ bubble('此浏览器不支持语音输入'); return; }
+    const r=new SR(); r.lang='zh-CN'; r.interimResults=false;
+    r.onresult=e=>{ $('#in').value=($('#in').value?$('#in').value+' ':'')+e.results[0][0].transcript; };
+    r.onerror=()=>bubble('语音识别失败');
+    try{ r.start(); bubble('🎤 在听呢～'); }catch(e){}
+  });
+  $('#c-game').addEventListener('click',()=>{ setMode('game'); $('#gamebox').classList.add('show'); });
+  $('#c-watch').addEventListener('click',()=>setMode('watch'));
+  $('#c-chat').addEventListener('click',()=>{ setMode('chat'); $('#gamebox').classList.remove('show'); });
+  $('#c-game-dlg').addEventListener('click',()=>{ setMode('game'); $('#gamebox').classList.add('show'); });
+  $('#gameGo').addEventListener('click',()=>{
+    const n=$('#gameName').value.trim(); if(!n){ bubble('告诉汐汐玩什么嘛～'); return; }
+    game=n; send(`（开始陪玩）我们开始玩《${n}》啦，汐汐给我点开局鼓励！`);
+  });
+  $('#gameWin').addEventListener('click',()=>{ if(!game){bubble('先开始陪玩哦');return;} win++; send(`（赢了）刚打完《${game}》赢啦！快跟我庆祝！`); });
+  $('#gameLose').addEventListener('click',()=>{ if(!game){bubble('先开始陪玩哦');return;} lose++; send(`（输了）刚打完《${game}》输了…安慰安慰我`); });
+  $('#c-persona').textContent = persona==='whale' ? '🐳 汐汐' : '🦈 澜澜';
+  $('#c-persona').addEventListener('click', toggleP);
+  $('#avaCanvas').addEventListener('click',e=>{
+    const r=e.target.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width*300, y=(e.clientY-r.top)/r.height*460;
+    interact(hit(x,y));
+  });
+  if(speechSynthesis) speechSynthesis.getVoices();
+  setInterval(()=>{ if(!busy&&Math.random()<0.5){ bubble(pick(['主人～要不要喝点水？','咕噜咕噜～海风吹起来啦！','今天的海一定很蓝吧～'])); } },50000);
+  startAv(); dot('on');
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+
+
+
+
+</body>
+</html>
+
