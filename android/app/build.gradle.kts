@@ -20,6 +20,9 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            // 个人应用：用 debug 密钥签名，保证 release 版可直接安装
+            // （若要上架 Google Play，请替换为正式 keystore）
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
