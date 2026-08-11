@@ -2,8 +2,12 @@
 // 负责：主窗口 / 透明桌面悬浮窗 / IPC / 全局快捷键
 const { app, BrowserWindow, ipcMain, globalShortcut, screen } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
-const PAGE = path.join(__dirname, '..', 'whale-maid-pc.html');
+// 打包后 html 会复制到 electron 目录内；开发模式用上级目录的网页版
+const PAGE = fs.existsSync(path.join(__dirname, 'whale-maid-pc.html'))
+  ? path.join(__dirname, 'whale-maid-pc.html')
+  : path.join(__dirname, '..', 'whale-maid-pc.html');
 
 let mainWin = null;
 let overlayWin = null;
