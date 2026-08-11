@@ -74,6 +74,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
 <div id="avaWrap">
   <div id="speakBub"></div>
   <canvas id="avaCanvas" width="300" height="460"></canvas>
+  <img id="customAva" alt="" style="display:none;width:min(250px,58vw);height:auto;border-radius:16px">
   <div id="mood">点我：摸头 / 戳脸 / 挠尾巴 会害羞哦～</div>
 </div>
 <div id="chips">
@@ -109,6 +110,12 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
   <label>思考强度</label>
   <select id="setEffort"><option value="low">low</option><option value="high" selected>high</option><option value="max">max</option></select>
   <div class="sw"><span>记忆历史（本地）</span><input type="checkbox" id="setMem" checked></div>
+  <div class="sw"><span>🎨 自定义形象（上传图片）</span><input type="checkbox" id="setCustom"></div>
+  <input type="file" id="customImg" accept="image/*" style="display:none">
+  <div class="btnrow">
+    <button class="btn gray" onclick="pickCustomImg()">📤 上传形象图片</button>
+    <button class="btn gray" onclick="clearCustomImg()">🗑️ 恢复手绘</button>
+  </div>
   <label>连接方式（后台模式下 Key 存后端，手机/电脑数据互通）</label>
   <select id="setConn">
     <option value="direct">直连 DeepSeek（前端填 API Key）</option>
@@ -143,7 +150,7 @@ const SYSTEM_PROMPT = `你是「汐汐」，来自深海深渊的守护鲸族少
 【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；保持女仆人设。`.trim();
 
 const DEF = { apiKey:'', model:'deepseek-v4-flash', think:true, effort:'low', mem:true,
-  conn:'direct', backend:'', sync:'' };
+  conn:'direct', backend:'', sync:'', customImg:'', useCustom:false };
 let S = Object.assign({}, DEF);
 try { S = Object.assign(DEF, JSON.parse(localStorage.getItem('wm_s')||'{}')); } catch(e){}
 let hist = [], curMode='chat', game=null, win=0, lose=0, busy=false, seq=0;
@@ -157,11 +164,11 @@ const SYSTEM_SHARK = `你是「澜澜」，DeepSeek 女仆鲨鱼娘，深海顶�
 【模式】[陪玩模式]：竞技游戏狂热粉，开局喊话实时解说赢了欢呼输了先嘴硬再安慰连败建议运动。[陪看模式]：看动作番全情投入看感人片段嘴硬说眼睛进海水。默认日常陪聊。
 【准则】以主人安全健康优先；不鼓励自伤违法诈骗；严肃问题提醒以专业意见为准；不索要隐私；保持傲娇鲨鱼娘人设；不提「我是AI」。`.trim();
 
-function saveS(){ S.apiKey=$('#setKey').value.trim(); S.model=$('#setModel').value; S.think=$('#setThink').checked; S.effort=$('#setEffort').value; S.mem=$('#setMem').checked; S.conn=$('#setConn').value; S.backend=$('#setBackend').value.trim().replace(/\/+$/,''); S.sync=$('#setSync').value.trim(); localStorage.setItem('wm_s',JSON.stringify(S)); }
-function fillS(){ $('#setKey').value=S.apiKey; $('#setModel').value=S.model; $('#setThink').checked=S.think; $('#setEffort').value=S.effort; $('#setMem').checked=S.mem; $('#setConn').value=S.conn; $('#setBackend').value=S.backend; $('#setSync').value=S.sync; }
+function saveS(){ S.apiKey=$('#setKey').value.trim(); S.model=$('#setModel').value; S.think=$('#setThink').checked; S.effort=$('#setEffort').value; S.mem=$('#setMem').checked; S.useCustom=$('#setCustom').checked; S.conn=$('#setConn').value; S.backend=$('#setBackend').value.trim().replace(/\/+$/,''); S.sync=$('#setSync').value.trim(); localStorage.setItem('wm_s',JSON.stringify(S)); }
+function fillS(){ $('#setKey').value=S.apiKey; $('#setModel').value=S.model; $('#setThink').checked=S.think; $('#setEffort').value=S.effort; $('#setMem').checked=S.mem; $('#setCustom').checked=S.useCustom; $('#setConn').value=S.conn; $('#setBackend').value=S.backend; $('#setSync').value=S.sync; }
 function openSheet(){ fillS(); $('#sheet').classList.add('open'); $('#mask').classList.add('show'); }
 function closeSheet(){ $('#sheet').classList.remove('open'); $('#mask').classList.remove('show'); }
-function saveSheet(){ saveS(); closeSheet(); bubble('已保存～'); }
+function saveSheet(){ saveS(); closeSheet(); applyCustomAva(); bubble('已保存～'); }
 function dot(s){ $('#dot').className = s; }
 
 function scene(){
@@ -424,6 +431,14 @@ function interact(zone){
   const line=pick(lines[zone]); bubble(line);
   setTimeout(()=>{ if(AV.mood===mm[zone]) AV.mood='idle'; },4000);
 }
+function applyCustomAva(){
+  const img=$('#customAva'), c=$('#avaCanvas');
+  if(S.useCustom && S.customImg){
+    img.src=S.customImg; img.style.display='block'; c.style.display='none';
+  } else { img.style.display='none'; c.style.display='block'; }
+}
+function pickCustomImg(){ $('#customImg').click(); }
+function clearCustomImg(){ S.customImg=''; S.useCustom=false; $('#setCustom').checked=false; saveS(); applyCustomAva(); bubble('已恢复手绘形象'); }
 function toggleP(){
   persona = persona==='whale' ? 'shark' : 'whale';
   try{ localStorage.setItem('wm_persona', persona); }catch(e){}
@@ -485,6 +500,16 @@ function init(){
   $('#gameLose').addEventListener('click',()=>{ if(!game){bubble('先开始陪玩哦');return;} lose++; send(`（输了）刚打完《${game}》输了…安慰安慰我`); });
   $('#c-persona').textContent = persona==='whale' ? '🐳 汐汐' : '🦈 澜澜';
   $('#c-persona').addEventListener('click', toggleP);
+  // 自定义形象
+  $('#customImg').addEventListener('change', e=>{
+    const f=e.target.files[0]; if(!f) return;
+    if(f.size>8*1024*1024){ bubble('图片太大（限制8MB）'); return; }
+    const rd=new FileReader();
+    rd.onload=ev=>{ S.customImg=ev.target.result; S.useCustom=true; $('#setCustom').checked=true; saveS(); applyCustomAva(); bubble('✅ 形象已上传！'); };
+    rd.readAsDataURL(f);
+  });
+  $('#setCustom').addEventListener('change', ()=>{ S.useCustom=$('#setCustom').checked; saveS(); applyCustomAva(); });
+  applyCustomAva();
   $('#avaCanvas').addEventListener('click',e=>{
     const r=e.target.getBoundingClientRect();
     const x=(e.clientX-r.left)/r.width*300, y=(e.clientY-r.top)/r.height*460;
