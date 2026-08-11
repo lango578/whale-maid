@@ -13,8 +13,8 @@ android {
         applicationId = "com.whalemaid.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.2"
+        versionCode = 5
+        versionName = "1.1.3"
     }
 
     buildTypes {
@@ -30,7 +30,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 }
 
 dependencies {
