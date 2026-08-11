@@ -3,30 +3,32 @@
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#132a47"/><stop offset="1" stop-color="#081426"/>
     </linearGradient>
-    <linearGradient id="tail" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2c7da0"/><stop offset="1" stop-color="#0f3d63"/>
-    </linearGradient>
   </defs>
   <rect width="192" height="192" rx="40" fill="url(#bg)"/>
-  <circle cx="96" cy="96" r="66" fill="#ffe9de"/>
-  <path d="M96 34 C52 36 40 70 38 104 L38 168 C52 178 80 170 96 168 C112 170 140 178 154 168 L154 104 C152 70 140 36 96 34 Z" fill="#1f6b94"/>
-  <path d="M46 76 C40 66 42 52 52 50 C62 52 66 64 62 74 Z" fill="#3b9cc0"/>
-  <path d="M146 76 C152 66 150 52 140 50 C130 52 126 64 130 74 Z" fill="#3b9cc0"/>
-  <path d="M60 62 C56 46 64 36 80 36 L96 40 L112 36 C128 36 136 46 132 62 L96 56 Z" fill="#113a5c"/>
-  <path d="M58 44 C96 22 134 22 134 44 L134 56 L58 56 Z" fill="#3b9cc0"/>
-  <path d="M58 44 A34 34 0 0 1 134 44 Z" fill="#113a5c"/>
-  <path d="M50 56 A46 12 0 0 1 142 56 Z" fill="#ffffff"/>
-  <path d="M42 54 C34 62 36 74 46 78 L44 68 Z" fill="#2bb9c8"/>
-  <circle cx="76" cy="92" r="9" fill="#16405f"/>
-  <circle cx="78" cy="90" r="3.5" fill="#3ec6d6"/>
-  <circle cx="116" cy="92" r="9" fill="#16405f"/>
-  <circle cx="118" cy="90" r="3.5" fill="#3ec6d6"/>
-  <circle cx="76" cy="90" r="2" fill="#fff"/>
-  <circle cx="116" cy="90" r="2" fill="#fff"/>
-  <path d="M96 108 A8 8 0 0 0 88 108" stroke="#b0526a" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <path d="M96 34 L96 20 C102 16 104 24 96 26 Z" fill="#7fe0f0"/>
-  <path d="M88 178 C120 176 150 182 158 192 L34 192 C42 182 72 178 88 178 Z" fill="#2c7da0"/>
-  <path d="M96 158 L96 188 M96 188 C88 198 70 202 62 196 L96 188 Z M96 188 C104 198 122 202 130 196 L96 188 Z" fill="url(#tail)" stroke="#eaf7fd" stroke-width="2"/>
-  <circle cx="60" cy="172" r="4" fill="none" stroke="#9fe9f5" stroke-width="1.5"/>
-  <circle cx="134" cy="168" r="3" fill="none" stroke="#9fe9f5" stroke-width="1.5"/>
+  <!-- 后发 -->
+  <path d="M96 34 C72 34 58 46 58 66 L58 118 C70 124 84 126 96 126 C108 126 122 124 134 118 L134 66 C134 46 120 34 96 34 Z" fill="#1F6B94"/>
+  <!-- 脸 -->
+  <circle cx="96" cy="88" r="52" fill="#FFE9DE"/>
+  <!-- 刘海 -->
+  <path d="M64 76 C66 56 78 46 96 46 C114 46 126 56 128 76 L116 68 L106 72 L96 62 L86 72 L76 68 Z" fill="#2C86A5"/>
+  <!-- 呆毛 -->
+  <path d="M96 46 C101 36 91 30 98 20" stroke="#7FE0F0" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <!-- 眼睛 -->
+  <ellipse cx="80" cy="92" rx="9" ry="11" fill="#16405F"/>
+  <ellipse cx="112" cy="92" rx="9" ry="11" fill="#16405F"/>
+  <ellipse cx="80" cy="92" rx="5.5" ry="7" fill="#3EC6D6"/>
+  <ellipse cx="112" cy="92" rx="5.5" ry="7" fill="#3EC6D6"/>
+  <circle cx="77.5" cy="88" r="2.6" fill="#fff"/>
+  <circle cx="109.5" cy="88" r="2.6" fill="#fff"/>
+  <!-- 腮红 -->
+  <ellipse cx="62" cy="104" rx="7" ry="4.2" fill="#FF9EB2" opacity="0.75"/>
+  <ellipse cx="130" cy="104" rx="7" ry="4.2" fill="#FF9EB2" opacity="0.75"/>
+  <!-- 嘴 -->
+  <path d="M88 112 Q96 118 104 112" stroke="#B0526A" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- 女仆发箍 -->
+  <path d="M62 72 Q96 58 130 72" stroke="#FFFFFF" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+  <!-- 蝴蝶结 -->
+  <path d="M64 74 L50 62 L60 74 L48 84 L66 76 Z" fill="#2BB9C8"/>
+  <!-- 底部鲸鱼尾 -->
+  <path d="M64 148 C80 140 112 140 128 148 C140 154 144 164 136 170 C130 160 120 156 96 156 C72 156 62 160 56 170 C48 164 52 154 64 148 Z" fill="#2C7DA0"/>
 </svg>
