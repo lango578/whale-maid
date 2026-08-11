@@ -3,7 +3,6 @@ package com.whalemaid.app
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
-import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -93,8 +92,6 @@ private val OceanDark = darkColorScheme(
 
 class MainActivity : ComponentActivity() {
 
-    private var tts: TextToSpeech? = null
-    private var ttsReady = false
     private lateinit var voiceConsumer: (String) -> Unit
 
     private val voiceLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
@@ -107,16 +104,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        tts = TextToSpeech(this) { status ->
-            ttsReady = status == TextToSpeech.SUCCESS
-            tts?.language = java.util.Locale.CHINA
-        }
         setContent { WhaleMaidApp() }
-    }
-
-    private fun speak(text: String) {
-        if (!ttsReady || text.isBlank()) return
-        tts?.speak(text.take(200), TextToSpeech.QUEUE_FLUSH, null, "wm")
     }
 
     private fun launchVoice() {
@@ -163,7 +151,6 @@ class MainActivity : ComponentActivity() {
             if (shouldSpeak && !last.streaming && last.role == "assistant" && last.content.isNotEmpty()) {
                 shouldSpeak = false
                 speaking = false
-                if (vm.speakOn) speak(last.content)
             } else if (!last.streaming) {
                 speaking = false
             }
