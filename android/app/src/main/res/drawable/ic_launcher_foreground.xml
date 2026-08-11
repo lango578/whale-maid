@@ -35,8 +35,7 @@
         android:pathData="M42.5,53.5 a1.7,1.7 0 1,0 0.1,0 Z M62.5,53.5 a1.7,1.7 0 1,0 0.1,0 Z" />
     <!-- 腮红 -->
     <path
-        android:fillColor="#FF9EB2"
-        android:opacity="0.75"
+        android:fillColor="#B3FF9EB2"
         android:pathData="M36,63 a4,2.4 0 1,0 0.1,0 Z M72,63 a4,2.4 0 1,0 0.1,0 Z" />
     <!-- 嘴 -->
     <path
