@@ -17,6 +17,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -516,7 +517,7 @@ class MainActivity : ComponentActivity() {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Canvas(modifier = Modifier
                 .fillMaxWidth()
-                .height(230.dp)
+                .aspectRatio(300f / 460f)
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
                         val x = offset.x / size.width * 300f
